@@ -1,0 +1,40 @@
+'''Create a job'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+
+
+'''Check: Deleting a job always return status code 200'''
+
+-!|script|!-RestTools-!|
+|DELETE|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+
+|query:last response as table|
+|status_code                 |
+|200                         |
+
+
+
+-!|script|!-RestTools-!|
+|DELETE|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+
+|query:last response as table|
+|status_code                 |
+|200                         |
+
+
+-!|script|!-RestTools-!|
+|DELETE|${SERVICE_URL}${API_JOBS}${JOB_NAME_2}|
+
+|query:last response as table|
+|status_code                 |
+|200                         |
+
+
+-!|script|!-RestTools-!|
+|DELETE|${SERVICE_URL}${API_JOBS}|
+
+|query:last response as table|
+|status_code                 |
+|200                         |
+

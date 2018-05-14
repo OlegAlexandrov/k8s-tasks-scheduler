@@ -1,0 +1,13 @@
+'''Create Job'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+'''Check: Existing job return response with code 200'''
+|query:response as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+|status_code                                                   |
+|200                                                           |
+
+'''Check: Return code 404 for non existing job'''
+|query:response as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_2}|
+|status_code            |body.name                             |
+|404                    |                                      |

@@ -1,0 +1,10 @@
+*.zip
+*.jar
+fixtures
+FitNesseRoot/RecentChanges
+FitNesseRoot/ErrorLogs
+FitNesseRoot/files
+FitNesseRoot/updateDoNotCopyOverList
+FitNesseRoot/updateList
+FitNesseRoot/FitNesse
+FitNesseRoot/properties

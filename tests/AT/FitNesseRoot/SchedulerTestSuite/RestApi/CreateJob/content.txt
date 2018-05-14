@@ -1,0 +1,9 @@
+'''Create Job'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+
+'''Check: Job is created'''
+|query:response as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}                       |
+|body.name              |status_code|body.state|body.request.uri|body.recur.triggers.0|
+|${JOB_NAME_1}          |200        |run       |${CALLBACK_URI} |${CRON_EVERY_MINUTE} |

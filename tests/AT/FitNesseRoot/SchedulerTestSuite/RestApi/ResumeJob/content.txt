@@ -1,0 +1,21 @@
+'''Give: Create Job'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+
+'''When: Pause and resume job'''
+-!|script|!-RestTools-!|
+|POST|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}/pause|
+
+|query:http result as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+|name         |state|request.uri    |recur.triggers.0    |
+|${JOB_NAME_1}|pause|${CALLBACK_URI}|${CRON_EVERY_MINUTE}|
+
+-!|script|!-RestTools-!|
+|POST|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}/resume|
+
+
+'''Then: Check Job state'''
+|query:http result as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+|name         |state|request.uri    |recur.triggers.0    |
+|${JOB_NAME_1}|run  |${CALLBACK_URI}|${CRON_EVERY_MINUTE}|

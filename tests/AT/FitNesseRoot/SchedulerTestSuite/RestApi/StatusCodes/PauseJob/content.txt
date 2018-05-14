@@ -1,0 +1,21 @@
+'''Create a job'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+
+
+'''Check: If pausing a job is successful then response code is 200'''
+-!|script|!-RestTools-!|
+|POST|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}/pause|
+
+|query:last response as table|
+|status_code                 |
+|200                         |
+
+'''Check: If job name is not passed then response code is 404 '''
+-!|script|!-RestTools-!|
+|POST|${SERVICE_URL}${API_JOBS}/pause|
+
+|query:last response as table|
+|status_code                 |
+|404                         |

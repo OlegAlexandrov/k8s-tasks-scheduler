@@ -1,0 +1,22 @@
+'''Give: Create Job'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+|query:http result as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+|name         |request.uri    |recur.triggers.0    |
+|${JOB_NAME_1}|${CALLBACK_URI}|${CRON_EVERY_MINUTE}|
+
+
+'''When: Update job'''
+-!|script|!-RestTools-!|
+|update job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_HOUR}|
+
+|query:last response as table|
+|status_code   |
+|200           |
+
+
+'''Then: Check Job has new trigger'''
+|query:http result as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_1}|
+|name         |request.uri    |recur.triggers.0  |
+|${JOB_NAME_1}|${CALLBACK_URI}|${CRON_EVERY_HOUR}|

@@ -1,0 +1,32 @@
+'''Check: Job creation returns code 201'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+|query:last response as table|
+|status_code   |body.status  |
+|201           |OK           |
+
+
+'''Check: Creating a job that already exists returns code 409'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+|query:last response as table|
+|status_code   |
+|409           |
+
+'''Check: Creating a job with invalid parameters returns code 400'''
+-!|script|!-RestTools-!|
+|create job||uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+|query:last response as table|
+|status_code   |
+|400|
+
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_2}|uri|${CALLBACK_URI}|recur||
+
+|query:last response as table|
+|status_code   |
+|400|
+

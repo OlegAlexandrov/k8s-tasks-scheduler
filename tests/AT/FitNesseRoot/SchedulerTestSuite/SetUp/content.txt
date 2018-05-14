@@ -1,0 +1,40 @@
+!define CRON_EVERY_2SECONDS {0/2 * * * * * ?}
+!define CRON_EVERY_MINUTE {0/1 * * * * ?}
+!define CRON_EVERY_HOUR {0 0/1 * * * ?}
+!define CALLBACK_URI {!-http://fakeurl-!}
+!define SERVICE_URL {!-http://127.0.0.1:8086-!}
+!define API_JOBS {/api/jobs/}
+!define JOB_NAME_1 {job-1}
+!define JOB_NAME_2 {job-2}
+
+!*> Scenario Libraries
+|scenario|create job |name|uri                   |uri                  |recur                  |trigger                  |
+|POST    |${API_JOBS}|    |{"name":"@name", "request":{"uri":"@uri", "method":"POST"}, "recur":{"triggers":["@trigger"]}}|
+
+|scenario|update job      |name|uri               |uri              |recur              |trigger              |
+|PUT     |${API_JOBS}@name|    |{"request":{"uri":"@uri", "method":"POST"}, "recur":{"triggers":["@trigger"]}}|
+
+|scenario|url|path  |response attribute|attr     |has value|val                                    |
+|wait    |0.4|second|25                |times url|@path    |response attribute|@attr|has value|@val|
+
+|scenario|url|path  |args|args     |response value|val                           |
+|wait    |0.4|second|25  |times url|@path         |args|@args|response value|@val|
+*!
+
+!*> Import fixtures
+|import    |
+|http_calls|
+
+-!|script|!-RestTools-!|
+|set host url|${SERVICE_URL}|
+*!
+
+!*> Delete Jobs
+-!|script|!-RestTools-!|
+|DELETE|${SERVICE_URL}${API_JOBS}|
+*!
+
+!*> Wait until scheduler to be up
+-!|script|!-RestTools-!                                    |
+|url|${SERVICE_URL}${API_JOBS}|args||response value|[]|
+*!

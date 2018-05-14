@@ -1,0 +1,17 @@
+!define REQUEST_BODY ({"name":"${JOB_NAME_2}", "request":{"uri":"${CALLBACK_URI}", "method":"PUT"}, "recur":{"triggers":["${CRON_EVERY_MINUTE}"]}})
+
+
+'''Given: Create job which will create another job'''
+-!|script|!-RestTools-!|
+|PUT|${API_JOBS}${JOB_NAME_1}||{"name":"${JOB_NAME_1}", "request":{"uri":"${SERVICE_URL}${API_JOBS}${JOB_NAME_2}", "method":"PUT", "json":true, "body": ${REQUEST_BODY}}, "recur":{"triggers":["${CRON_EVERY_2SECONDS}"]}}|
+
+
+'''When: Wait job ${JOB_NAME_2} is created'''
+-!|script|!-RestTools-!                                                            |
+|url|${SERVICE_URL}${API_JOBS}${JOB_NAME_2}|response attribute|name|has value|${JOB_NAME_2}|
+
+
+'''Then: Check that created job is valid'''
+|query:response as table|${SERVICE_URL}${API_JOBS}${JOB_NAME_2}                       |
+|body.name              |status_code|body.state|body.request.uri|body.recur.triggers.0|
+|${JOB_NAME_2}          |200        |run       |${CALLBACK_URI} |${CRON_EVERY_MINUTE} |

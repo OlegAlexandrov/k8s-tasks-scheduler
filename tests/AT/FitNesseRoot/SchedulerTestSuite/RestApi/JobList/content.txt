@@ -1,0 +1,11 @@
+'''Create Jobs'''
+-!|script|!-RestTools-!|
+|create job|${JOB_NAME_1}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+|create job|${JOB_NAME_2}|uri|${CALLBACK_URI}|recur|${CRON_EVERY_MINUTE}|
+
+
+'''Get list of jobs'''
+|query:http result as table|${SERVICE_URL}${API_JOBS}|
+|name         |state|request.uri    |recur.triggers.0    |
+|${JOB_NAME_1}|run  |${CALLBACK_URI}|${CRON_EVERY_MINUTE}|
+|${JOB_NAME_2}|run  |${CALLBACK_URI}|${CRON_EVERY_MINUTE}|

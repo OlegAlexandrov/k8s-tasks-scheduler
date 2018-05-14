@@ -1,0 +1,15 @@
+!*> Init variables
+
+!define TEST_SYSTEM {slim}
+!define SLIM_HOST {localhost}
+!define SLIM_VERSION {0.1}
+!define SLIM_PORT {8050}
+!define SLIM_POOL_SIZE {29}
+!define COMMAND_PATTERN {python -m waferslim.server -i 0.0.0.0 --syspath %p -v  }
+
+!define root_path {./}
+!path ${root_path}/fixtures
+
+*!
+
+!contents -R2 -g -p -f -h
