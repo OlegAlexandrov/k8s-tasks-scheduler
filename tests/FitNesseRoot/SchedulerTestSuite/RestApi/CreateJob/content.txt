@@ -1,0 +1,9 @@
+'''Create Job'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri}|recur|${cron_every_minute}|image||args|"/bin/sh","-c","date; echo Hello from the Kubernetes cluster"|
+
+
+'''Check: Job is created'''
+|query:response as table|${service_url}${api_jobs}${job_name_1}                        |
+|body.name              |status_code|body.active|body.request.uri|body.recur.triggers.0|
+|${job_name_1}          |200        |           |${request_uri}  |${cron_every_minute} |

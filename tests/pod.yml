@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: k8s-tasks-scheduler-pod
+  labels:
+    app: k8s-tasks-scheduler-label
+spec:
+  volumes:
+  - name: fitnesseroot
+    hostPath:
+      path: /home/joint/Projects/k8s-tasks-scheduler/tests/FitNesseRoot
+  - name: fixtures
+    hostPath:
+      path: /home/joint/Projects/k8s-tasks-scheduler/tests/fixtures
+  containers:
+  - image: olegalexandroff/k8s-tasks-scheduler:1.0.2
+    imagePullPolicy: IfNotPresent
+    name: k8s-tasks-scheduler
+    ports:
+    - containerPort: 8086
+    env:
+    - name: NAMESPACE
+      value: default
+    - name: EXECUTOR_IMAGE
+      value: busybox
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
+  - image: mikeplavsky/docker-waferslim
+    imagePullPolicy: IfNotPresent
+    name: k8s-tasks-scheduler-fitnesse
+    ports:
+    - containerPort: 8081
+    volumeMounts:
+    - name: fitnesseroot
+      mountPath: /FitNesseRoot
+    - name: fixtures
+      mountPath: /binaries/fixtures
+    resources:
+      requests:
+        cpu: 50m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi

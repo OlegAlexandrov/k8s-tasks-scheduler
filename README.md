@@ -1,4 +1,4 @@
-﻿# NodeJs Task Scheduler
+﻿# K8s Task Scheduler
 
 ## REST API:
 

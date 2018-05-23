@@ -1,0 +1,21 @@
+'''Create Job'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|
+
+'''Check Job'''
+|query:http result as table|${service_url}${api_jobs}${job_name_1}|
+|name                      |request.uri      |recur.triggers.0    |
+|${job_name_1}             |${request_uri_1} |${cron_every_minute}|
+
+'''Update job'''
+-!|script|!-RestTools-!|
+|update job|${job_name_1}|uri|${request_uri_2}|recur|${cron_every_hour}|
+
+|query:last response as table      |
+|status_code|body.code|body.message|
+|200        |200      |Job updated.|
+
+'''Check updated Job'''
+|query:http result as table|${service_url}${api_jobs}${job_name_1}|
+|name                      |request.uri       |recur.triggers.0   |
+|${job_name_1}             |${request_uri_2}  |${cron_every_hour} |

@@ -1,0 +1,50 @@
+!define cron_every_minute {0/1 * * * *}
+!define cron_every_hour {0 0/1 * * *}
+
+!define request_uri {!-http://server.net-!}
+!define request_uri_1 {!-http://server.net-!}
+!define request_uri_2 {!-http://host.net-!}
+
+!define service_url {!-http://127.0.0.1:8086-!}
+!define api_jobs {/api/jobs/}
+
+!define job_name_1 {job-1}
+!define job_name_2 {job-2}
+!define job_name_3 {job-3}
+!define job_name_4 {job-4}
+!define long_job_name_1 (!-969893ad-2fda-43ad-9c40-37388e304890-b01b2e51-2--b-4558-80bb-90573acaacc5-f4a05784-c5fe-4441-bad--abf69786a9af-!)
+!define long_job_name_2 (!-a306e0fa-eb03-43c5-ae82-0768e74ae2bf-5ec56cef-fc4f-4e78-9590-319062d8a751-!)
+
+!*> Scenario Libraries
+|scenario|create job |name|uri                      |uri                      |recur                      |trigger                     |
+|POST    |${api_jobs}|    |{ "name": "@name", "request": { "uri": "@uri", "method": "POST" }, "recur": { "triggers": [ "@trigger" ] } }|
+
+|scenario|create job |name|uri                |uri                |recur               |trigger               |labels               |labels               |
+|POST    |${api_jobs}|    |{ "name": "@name", "request": { "uri": "@uri", "method": "POST" }, "recur": { "triggers": [ "@trigger" ] }, "labels": @labels }|
+
+|scenario|create job |name|uri               |uri               |recur               |trigger               |image               |image               |args               |args              |
+|POST    |${api_jobs}|    |{ "name": "@name", "request": { "uri": "@uri", "method": "POST" }, "recur": { "triggers": [ "@trigger" ] }, "executor": { "image": "@image", "args": [ @args ] } }|
+
+|scenario|update job      |name|uri               |uri              |recur              |trigger              |
+|PUT     |${api_jobs}@name|    |{"request":{"uri":"@uri", "method":"POST"}, "recur":{"triggers":["@trigger"]}}|
+
+|scenario|url|path  |response length|length                                           |
+|wait    |0.4|second|25             |times url|@path|response array has length|@length|
+
+|scenario|wait all jobs length     |length                 |
+|url     |${service_url}${api_jobs}|response length|@length|
+*!
+
+!*> Import fixtures
+|import             |
+|fixtures.http_calls|
+
+-!|script|!-RestTools-!|
+|set host url|${service_url}|
+*!
+
+!*> Delete Jobs
+-!|script|!-RestTools-!|
+|DELETE              |${service_url}${api_jobs}|
+|wait all jobs length|0                        |
+*!

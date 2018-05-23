@@ -1,0 +1,11 @@
+#
+# Dockerfile for package-lock.json build
+#
+
+FROM node:8.11.2-alpine as npms
+
+WORKDIR /root
+COPY ./package.json ./
+
+RUN npm install . --production
+RUN npm dedupe

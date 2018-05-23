@@ -1,0 +1,21 @@
+'''Given: Create Jobs'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri}|recur|${cron_every_minute}|
+|create job|${job_name_2}|uri|${request_uri}|recur|${cron_every_minute}|
+
+|query:http result as table|${service_url}${api_jobs}                       |
+|name                      |body.active|request.uri    |recur.triggers.0    |
+|${job_name_1}             |           |${request_uri}|${cron_every_minute}|
+|${job_name_2}             |           |${request_uri}|${cron_every_minute}|
+
+'''When: Delete ${job_name_2}'''
+-!|script|!-RestTools-!|
+|DELETE|${service_url}${api_jobs}${job_name_2}|
+
+-!|script|!-RestTools-!|
+|wait all jobs length|1|
+
+'''Then: check that only ${job_name_1} exists'''
+|query:http result as table|${service_url}${api_jobs}                       |
+|name                      |body.active|request.uri    |recur.triggers.0    |
+|${job_name_1}             |           |${request_uri}|${cron_every_minute}|
