@@ -12,30 +12,16 @@ module.exports.models = {
 
     properties: {
 
-      start: {
-
-        type: "string",
-        defaultValue: null
-      },
-
-      triggers: {
-
-        type: "array", 
-        items: { type: "string" }
-      },
-
-      end: {
-
-        type: "string",
-        defaultValue: null
-      }
+      start: { type: "string", defaultValue: null },
+      triggers: { type: "array", items: { type: "string" } },
+      end: { type: "string", defaultValue: null }
     }
   },
 
   request_body: {
 
     id: "request_body",
-    type: "object"
+    type: "object",
     additionalProperties: true
   },
 
@@ -55,11 +41,18 @@ module.exports.models = {
         defaultValue: "POST"
       },
 
-      body: {
+      body: { $ref: "request_body", defaultValue: {} }
+    }
+  },
 
-        $ref: "request_body",
-        defaultValue: {}
-      }
+  executor: {
+
+    id: "executor",
+
+    properties: {
+
+      image: { type: "string", defaultValue: null },
+      args: { type: "array", items: { type: "string" } }
     }
   },
 
@@ -71,15 +64,11 @@ module.exports.models = {
     properties: {
 
       name: { type: "string" },
-
-      type: {
-
-        type: "string",
-        defaultValue: "rest"
-      },
-
+      type: { type: "string", defaultValue: "rest" },
       request: { $ref: "request" },
-      recur: { $ref: "recurrence" }
+      recur: { $ref: "recurrence" },
+      labels: { type: "object", additionalProperties: { type: "string" } },
+      executor: { $ref: "executor" }
     }
   },
 
