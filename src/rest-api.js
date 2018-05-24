@@ -7,6 +7,8 @@ const paramTypes = require( "swagger-node-express" ).paramTypes;
 const _ = require( "underscore" );
 const uuid = require( "uuid/v4" );
 const url = require( "url" );
+const semaphore = require( "semaphore-async-await" );
+const retry = require( "async-retry" );
 
 const kubeClient = require( "kubernetes-client" ).Client;
 const kubeConfig = require( "kubernetes-client" ).config;
@@ -40,6 +42,10 @@ const retCodes = {
 }
 
 const jobEnvName = "JOB";
+
+const retryOptions = { retries: 3, factor: 1, minTimeout: 500, maxTimeout: 500 };
+
+const lock = new semaphore.Lock();
 
 const retCode500 = ( msg ) => {
 
@@ -184,11 +190,38 @@ const cronJob = ( name, reqBody ) => {
   return job;
 }
 
+const doRetry = async ( func ) => {
+
+  return await retry(
+
+    async () => { return await func(); },
+
+    _.extend( {}, retryOptions, { onRetry: ( err ) => {
+
+      logger.error( "attempt failed:", err );
+    }})
+  );
+}
+
+const doLock = async ( func ) => {
+
+  await lock.acquire();
+
+  try {
+
+    await func();
+  }
+  finally {
+
+    lock.release();
+  }
+}
+
 const doAddJob = async ( reqBody, res ) => {
 
   try {
 
-    const job = await batchApi.namespaces( namespace ).cronjobs.post( { body: cronJob( undefined, reqBody ) } );
+    const job = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.post( { body: cronJob( undefined, reqBody ) } ) );
 
     logger.info( "job created: %j", job );
     res.status( 201 ).send( retCodes[ "201" ] );
@@ -206,7 +239,7 @@ const doUpdateJob = async ( name, reqBody, res ) => {
 
   try {
 
-    const job = await batchApi.namespaces( namespace ).cronjobs( name ).put( { body: cronJob( name, reqBody ) } );
+    const job = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs( name ).put( { body: cronJob( name, reqBody ) } ) );
 
     logger.info( "job updated: %j", job );
     res.status( 200 ).send( retCodes[ "200u" ] );
@@ -227,7 +260,7 @@ const prepareJob = async ( reqBody, jobId ) => {
 
   reqBody.recur.triggers[ 0 ] = fixCronExpression( reqBody.recur.triggers[ 0 ] );
 
-  const jobs = await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( jobId ) );
+  const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( jobId ) ) );
 
   logger.info( "jobs found: %j", jobs.body.items );
 
@@ -271,7 +304,7 @@ exports.getJob = {
 
       logger.info( "getJob: %s", req.params.jobId );
 
-      const jobs = await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( req.params.jobId ) );
+      const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( req.params.jobId ) ) );
 
       logger.info( "getJob, jobs found: %j", jobs );
 
@@ -318,7 +351,7 @@ exports.getAllJobs = {
 
       logger.info( "getAllJobs" );
 
-      const jobs = await batchApi.namespaces( namespace ).cronjobs.get( jobQuerySelector( req.url ) );
+      const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobQuerySelector( req.url ) ) );
 
       logger.info( "getAllJobs, jobs found: %j", jobs );
 
@@ -366,17 +399,20 @@ exports.addJob = {
 
       try {
 
-        const items = await prepareJob( req.body, req.body.name );
+        await doLock( async () => {
 
-        if ( !_.isEmpty( items ) ) {
+          const items = await prepareJob( req.body, req.body.name );
 
-          logger.error( `addJob, ${ retCodes[ "409" ].message }: %j`, items[ 0 ] );
-          res.status( 409 ).send( retCodes[ "409" ] );
-        }
-        else {
+          if ( !_.isEmpty( items ) ) {
 
-          doAddJob( req.body, res );
-        }
+            logger.error( `addJob, ${ retCodes[ "409" ].message }: %j`, items[ 0 ] );
+            res.status( 409 ).send( retCodes[ "409" ] );
+          }
+          else {
+
+            await doAddJob( req.body, res );
+          }
+        });
       }
       catch( err ) {
 
@@ -413,17 +449,20 @@ exports.updateJob = {
 
       try {
 
-        req.body.name = req.params.jobId;
-        const items = await prepareJob( req.body, req.params.jobId );
+        await doLock( async () => {
 
-        if ( !_.isEmpty( items ) ) {
+          req.body.name = req.params.jobId;
+          const items = await prepareJob( req.body, req.params.jobId );
 
-          doUpdateJob( items[ 0 ].metadata.name, req.body, res );
-        }
-        else {
+          if ( !_.isEmpty( items ) ) {
 
-          doAddJob( req.body, res );
-        }
+            await doUpdateJob( items[ 0 ].metadata.name, req.body, res );
+          }
+          else {
+
+            await doAddJob( req.body, res );
+          }
+        });
       }
       catch( err ) {
 
@@ -452,22 +491,25 @@ exports.deleteJob = {
 
       logger.info( "deleteJob: %s", req.params.jobId );
 
-      const jobs = await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( req.params.jobId ) );
+      await doLock( async () => {
 
-      const items = jobs.body.items;
+        const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( req.params.jobId ) ) );
 
-      if ( !_.isEmpty( items ) ) {
+        const items = jobs.body.items;
 
-        const ret = await batchApi.namespaces( namespace ).cronjobs( items[ 0 ].metadata.name ).delete();
+        if ( !_.isEmpty( items ) ) {
 
-        logger.info( "deleteJob result: %j", ret );
-        res.status( 200 ).send( retCodes[ "200d" ] );
-      }
-      else {
+          const ret = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs( items[ 0 ].metadata.name ).delete() );
 
-        logger.error( "deleteJob: job not found" );
-        res.status( 404 ).send( retCodes[ "404" ] );
-      }
+          logger.info( "deleteJob result: %j", ret );
+          res.status( 200 ).send( retCodes[ "200d" ] );
+        }
+        else {
+
+          logger.error( "deleteJob: job not found" );
+          res.status( 404 ).send( retCodes[ "404" ] );
+        }
+      });
     }
     catch( err ) {
 
@@ -495,7 +537,7 @@ exports.deleteAllJobs = {
 
       logger.info( "deleteAllJobs" );
 
-      const ret = await batchApi.namespaces( namespace ).cronjobs.delete( jobQuerySelector( req.url ) );
+      const ret = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.delete( jobQuerySelector( req.url ) ) );
 
       logger.info( "deleteAllJobs result: %j", ret );
       res.status( 200 ).send( retCodes[ "200a" ] );

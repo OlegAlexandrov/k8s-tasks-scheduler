@@ -4,5 +4,5 @@
 
 const winston = require( "winston" );
 
-winston.handleExceptions( new winston.transports.Console() );
+winston.handleExceptions( new winston.transports.Console( { colorize: true } ) );
 module.exports = winston;

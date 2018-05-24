@@ -4,7 +4,9 @@
 
 # 1. Prepare node_modules
 
-FROM node:8.11.2-alpine as npms
+ARG NODE_VERSION_ARG
+
+FROM node:$NODE_VERSION_ARG-alpine as npms
 
 WORKDIR /root
 COPY ./package.json ./
@@ -15,7 +17,7 @@ RUN npm dedupe
 
 # 2. Build image
 
-FROM node:8.11.2-alpine
+FROM node:$NODE_VERSION_ARG-alpine
 
 RUN apk update
 RUN apk add curl bash
@@ -30,12 +32,12 @@ COPY ./src /scheduler/src
 
 WORKDIR /scheduler/src
 
-ARG GIT_STATUS
-ARG GIT_COMMIT
-ARG IMAGE_TAG
+ARG GIT_STATUS_ARG
+ARG GIT_COMMIT_ARG
+ARG IMAGE_TAG_ARG
 
-ENV GIT_STATUS $GIT_STATUS
-ENV GIT_COMMIT $GIT_COMMIT
-ENV IMAGE_TAG $IMAGE_TAG
+ENV GIT_STATUS $GIT_STATUS_ARG
+ENV GIT_COMMIT $GIT_COMMIT_ARG
+ENV IMAGE_TAG $IMAGE_TAG_ARG
 
 CMD [ "node", "index.js" ]

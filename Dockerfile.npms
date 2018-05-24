@@ -2,7 +2,9 @@
 # Dockerfile for package-lock.json build
 #
 
-FROM node:8.11.2-alpine as npms
+ARG NODE_VERSION_ARG
+
+FROM node:$NODE_VERSION_ARG-alpine as npms
 
 WORKDIR /root
 COPY ./package.json ./

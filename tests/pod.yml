@@ -8,12 +8,12 @@ spec:
   volumes:
   - name: fitnesseroot
     hostPath:
-      path: /home/joint/Projects/k8s-tasks-scheduler/tests/FitNesseRoot
+      path: $FITNESSE_ROOT
   - name: fixtures
     hostPath:
-      path: /home/joint/Projects/k8s-tasks-scheduler/tests/fixtures
+      path: $FIXTURES
   containers:
-  - image: olegalexandroff/k8s-tasks-scheduler:1.0.2
+  - image: olegalexandroff/k8s-tasks-scheduler:$TAG
     imagePullPolicy: IfNotPresent
     name: k8s-tasks-scheduler
     ports:
