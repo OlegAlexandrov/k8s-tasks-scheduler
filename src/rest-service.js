@@ -33,7 +33,7 @@ module.exports.run = function( host, port ) {
 
   app.use( bodyParser.json() );
   app.use( bodyParser.urlencoded( { extended: true } ) );
-  app.use( expressWinston.logger( { transports: [ new winston.transports.Console( { json: true, colorize: true } ) ] } ) );
+  app.use( expressWinston.logger( { transports: [ new winston.transports.Console( { json: true, colorize: true, level: "warn" } ) ] } ) );
   app.use( api_path, docs_handler );
 
   const swagger = swaggerNode.createNew( docs_handler );

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: k8s-tasks-scheduler-pod
+  name: k8s-tasks-scheduler
   labels:
-    app: k8s-tasks-scheduler-label
+    app: k8s-tasks-scheduler
 spec:
   volumes:
   - name: fitnesseroot
@@ -12,10 +12,18 @@ spec:
   - name: fixtures
     hostPath:
       path: $FIXTURES
+  - name: sources
+    hostPath:
+      path: $SOURCES
+  - name: kubectl
+    hostPath:
+      path: /usr/local/bin/kubectl
+      type: File
   containers:
   - image: olegalexandroff/k8s-tasks-scheduler:$TAG
     imagePullPolicy: IfNotPresent
     name: k8s-tasks-scheduler
+    $SOURCES_VOLUME_MOUNT
     ports:
     - containerPort: 8086
     env:
@@ -40,6 +48,8 @@ spec:
       mountPath: /FitNesseRoot
     - name: fixtures
       mountPath: /binaries/fixtures
+    - name: kubectl
+      mountPath: /binaries/kubectl
     resources:
       requests:
         cpu: 50m

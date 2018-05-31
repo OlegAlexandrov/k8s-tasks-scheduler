@@ -56,6 +56,13 @@ module.exports.models = {
     }
   },
 
+  labels: {
+
+    id: "labels",
+    type: "object",
+    additionalProperties: { type: "string" }
+  },
+
   Job: {
 
     id: "Job",
@@ -64,10 +71,10 @@ module.exports.models = {
     properties: {
 
       name: { type: "string" },
-      type: { type: "string", defaultValue: "rest" },
+      type: { type: "string" },
+      labels: { $ref: "labels" },
       request: { $ref: "request" },
       recur: { $ref: "recurrence" },
-      labels: { type: "object", additionalProperties: { type: "string" } },
       executor: { $ref: "executor" }
     }
   },
@@ -80,9 +87,11 @@ module.exports.models = {
     properties: {
 
       name: { type: "string" },
-      labels: { type: "object", additionalProperties: { type: "string" } },
+      type: { type: "string" },
+      labels: { $ref: "labels" },
       request: { $ref: "request" },
       recur: { $ref: "recurrence" },
+      executor: { $ref: "executor" },
       active: { type: "boolean" },
       lastSchedule: { type: "string" }
     }

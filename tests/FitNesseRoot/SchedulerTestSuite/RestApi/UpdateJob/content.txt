@@ -9,13 +9,51 @@
 
 '''Update job'''
 -!|script|!-RestTools-!|
-|update job|${job_name_1}|uri|${request_uri_2}|recur|${cron_every_hour}|
+|update job|${job_name_1}|type|${job_type_cron}|labels|{ "app": "${app_scheduler}" }|uri|${request_uri_2}|method|${method_put}|body|{ "data": "${request_data_value}" }|recur|${cron_never_run}|start|${recur_start}|end|${recur_end}|image|${busybox_latest}|args|${args_hello}|
 
 |query:last response as table      |
 |status_code|body.code|body.message|
 |200        |200      |Job updated.|
 
 '''Check updated Job'''
-|query:http result as table|${service_url}${api_jobs}${job_name_1}|
-|name                      |request.uri       |recur.triggers.0   |
-|${job_name_1}             |${request_uri_2}  |${cron_every_hour} |
+|query:http result as table|${service_url}${api_jobs}${job_name_1}                                                                                                                                                                                     |
+|name                      |type            |labels.app      |request.uri     |request.method|request.body.data    |recur.triggers.0 |recur.start   |recur.end   |executor.image   |executor.args.0|executor.args.1|executor.args.2|active|lastSchedule|
+|${job_name_1}             |${job_type_cron}|${app_scheduler}|${request_uri_2}|${method_put} |${request_data_value}|${cron_never_run}|${recur_start}|${recur_end}|${busybox_latest}|${arg_hello_0} |${arg_hello_1} |${arg_hello_2} |False |=~/^$/      |
+
+
+'''Update non existing job'''
+-!|script|!-RestTools-!|
+|update job|${job_name_3}|type|${job_type_cron}|labels|{ "app": "${app_scheduler}" }|uri|${request_uri_3}|method|${method_post}|body|{ "data": "${request_data_value}" }|recur|${cron_every_hour}|start|${recur_start}|end|${recur_end}|image|${busybox_latest}|args|${args_hello}|
+
+|query:last response as table      |
+|status_code|body.code|body.message|
+|201        |201      |Job created.|
+
+'''Check Job'''
+|query:http result as table|${service_url}${api_jobs}${job_name_3}                                                                                                                                                                                      |
+|name                      |type            |labels.app      |request.uri     |request.method|request.body.data    |recur.triggers.0  |recur.start   |recur.end   |executor.image   |executor.args.0|executor.args.1|executor.args.2|active|lastSchedule|
+|${job_name_3}             |${job_type_cron}|${app_scheduler}|${request_uri_3}|${method_post}|${request_data_value}|${cron_every_hour}|${recur_start}|${recur_end}|${busybox_latest}|${arg_hello_0} |${arg_hello_1} |${arg_hello_2} |False |=~/^$/      |
+
+'''Update job with empty name'''
+-!|script|!-RestTools-!|
+|update job||uri|${request_uri_1}|recur|${cron_every_minute}|
+
+|query:last response as table      |
+|status_code|body.code|body.message|
+|404        |=~/^$/   |=~/^$/      |
+
+'''Update job with invalid parameters'''
+-!|script|!-RestTools-!|
+|update job|${job_name_3}|uri|${request_uri_1}|recur||
+
+|query:last response as table               |
+|status_code|body.code|body.message         |
+|400        |400      |Invalid request body.|
+
+'''Update job with invalid job name'''
+-!|script|!-RestTools-!|
+|update job|${invalid_job_name}|uri|${request_uri_1}|recur|${cron_every_hour}|
+
+|query:last response as table                 |
+|status_code|body.code|body.message           |
+|500        |500      |=~/invalid label value/|

@@ -1,0 +1,28 @@
+'''Create job'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|image||args|${args_sleep}|
+
+'''Check status code'''
+|query:last response as table      |
+|status_code|body.code|body.message|
+|201        |201      |Job created.|
+
+'''Wait for job to be active'''
+-!|script|!-RestTools-!|
+|wait|1|second|65|times url|${service_url}${api_jobs}${job_name_1}|response attribute|active|has value|True|
+
+'''Check job'''
+|query:http result as table|${service_url}${api_jobs}${job_name_1}|
+|name                      |active       |lastSchedule            |
+|${job_name_1}             |True         |=~/${date_regexp}/      |
+
+# commented out due to "Test system terminated with exception" error
+
+#'''Wait for job to be not active'''
+#-!|script|!-RestTools-!|
+#|wait|0.5|second|30|times url|${service_url}${api_jobs}${job_name_1}|response attribute|active|has value||
+
+#'''Check job'''
+#|query:http result as table|${service_url}${api_jobs}${job_name_1}|
+#|name                      |active       |lastSchedule            |
+#|${job_name_1}             |False        |=~/${date_regexp}/      |

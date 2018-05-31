@@ -1,13 +1,25 @@
-'''Create Job'''
+'''Create Jobs'''
 -!|script|!-RestTools-!|
-|create job|${job_name_1}|uri|${request_uri}|recur|${cron_every_minute}|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|
+|create job|${job_name_2}|uri|${request_uri_2}|recur|${cron_every_hour}  |
 
-'''Check: Existing job return response with code 200'''
-|query:response as table|${service_url}${api_jobs}${job_name_1}|
-|status_code                                                   |
-|200                                                           |
-
-'''Check: Return code 404 for non existing job'''
+'''Check return code for existing job'''
 |query:response as table|${service_url}${api_jobs}${job_name_2}|
 |status_code            |body.name                             |
-|404                    |                                      |
+|200                    |${job_name_2}                         |
+
+'''Check return code for non existing job'''
+|query:response as table|${service_url}${api_jobs}${job_name_3}|
+|status_code            |body.message                          |
+|404                    |Job not found.                        |
+
+'''Get all jobs'''
+|query:http result as table|${service_url}${api_jobs}            |
+|name                      |request.uri     |recur.triggers.0    |
+|${job_name_1}             |${request_uri_1}|${cron_every_minute}|
+|${job_name_2}             |${request_uri_2}|${cron_every_hour}  |
+
+'''Get job with invalid name'''
+|query:response as table|${service_url}${api_jobs}${invalid_job_name}|
+|status_code            |body.message                                |
+|500                    |=~/invalid label value/                     |

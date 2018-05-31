@@ -169,6 +169,7 @@ const cronJob = ( name, reqBody ) => {
                 name: "executor",
                 image: executor,
                 args: args,
+                imagePullPolicy: "IfNotPresent",
 
                 env: [{
 
@@ -231,7 +232,7 @@ const doAddJob = async ( reqBody, res ) => {
     const msg = "Failed to create cronjob";
 
     logger.error( `${ msg }:`, err );
-    res.status( 500 ).send( retCode500( `${ msg }.` ) );
+    res.status( 500 ).send( retCode500( `${ msg }, ${ err.message }` ) );
   }
 }
 
@@ -249,7 +250,7 @@ const doUpdateJob = async ( name, reqBody, res ) => {
     const msg = "Failed to update cronjob";
 
     logger.error( `${ msg }:`, err );
-    res.status( 500 ).send( retCode500( `${ msg }.` ) );
+    res.status( 500 ).send( retCode500( `${ msg }, ${ err.message }` ) );
   }
 }
 
@@ -274,9 +275,11 @@ const fillJob = ( job ) => {
   const data = {
 
     name: jobName( job.metadata.labels ),
+    type: jobData.type,
     labels: jobLabels( job.metadata.labels ),
     request: jobData.request,
     recur: jobData.recur,
+    executor: jobData.executor,
     active: !_.isEmpty( job.status.active ),
     lastSchedule: job.status.lastScheduleTime
   }
@@ -326,7 +329,7 @@ exports.getJob = {
     catch( err ) {
 
       logger.error( "getJob error:", err );
-      res.status( 500 ).send( retCodes[ "500" ] );
+      res.status( 500 ).send( retCode500( err.message ) );
     }
   }
 };
@@ -368,7 +371,7 @@ exports.getAllJobs = {
     catch( err ) {
 
       logger.error( "getAllJobs error:", err );
-      res.status( 500 ).send( retCodes[ "500" ] );
+      res.status( 500 ).send( retCode500( err.message ) );
     }
   }
 };
@@ -417,7 +420,7 @@ exports.addJob = {
       catch( err ) {
 
         logger.error( "addJob error:", err );
-        res.status( 500 ).send( retCodes[ "500" ] );
+        res.status( 500 ).send( retCode500( err.message ) );
       }
     }
   }
@@ -467,7 +470,7 @@ exports.updateJob = {
       catch( err ) {
 
         logger.error( "updateJob error:", err );
-        res.status( 500 ).send( retCodes[ "500" ] );
+        res.status( 500 ).send( retCode500( err.message ) );
       }
     }
   }
@@ -514,7 +517,7 @@ exports.deleteJob = {
     catch( err ) {
 
       logger.error( "deleteJob error:", err );
-      res.status( 500 ).send( retCodes[ "500" ] );
+      res.status( 500 ).send( retCode500( err.message ) );
     }
   }
 };
@@ -545,7 +548,7 @@ exports.deleteAllJobs = {
     catch( err ) {
 
       logger.error( "deleteAllJobs error:", err );
-      res.status( 500 ).send( retCodes[ "500" ] );
+      res.status( 500 ).send( retCode500( err.message ) );
     }
   }
 };
