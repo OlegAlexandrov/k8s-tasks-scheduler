@@ -13,9 +13,11 @@ metadata:
   labels:
     name: tasks-scheduler
 spec:
+  type: NodePort
   ports:
   - port: 8081
     targetPort: 8081
+    nodePort: 8081
   selector:
     app: k8s-tasks-scheduler
 ---
