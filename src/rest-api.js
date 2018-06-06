@@ -26,7 +26,8 @@ logger.info( `Executor image: ${ executor_image }` );
 logger.info( `k8s api version: ${ k8s_api_version }` );
 logger.info( `k8s batch api: ${ k8s_batch_api }` );
 
-const batchApi = ( new kubeClient( { config: kubeConfig.getInCluster(), version: k8s_api_version } ) ).apis.batch[ k8s_batch_api ];
+const k8sBatchApi = ( new kubeClient( { config: kubeConfig.getInCluster(), version: k8s_api_version } ) ).apis.batch[ k8s_batch_api ];
+const batchApi = k8sBatchApi.namespaces( namespace );
 
 const retCodes = {
 
@@ -222,7 +223,7 @@ const doAddJob = async ( reqBody, res ) => {
 
   try {
 
-    const job = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.post( { body: cronJob( undefined, reqBody ) } ) );
+    const job = await doRetry( async () => await batchApi.cronjobs.post( { body: cronJob( undefined, reqBody ) } ) );
 
     logger.info( "job created: %j", job );
     res.status( 201 ).send( retCodes[ "201" ] );
@@ -240,7 +241,7 @@ const doUpdateJob = async ( name, reqBody, res ) => {
 
   try {
 
-    const job = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs( name ).put( { body: cronJob( name, reqBody ) } ) );
+    const job = await doRetry( async () => await batchApi.cronjobs( name ).put( { body: cronJob( name, reqBody ) } ) );
 
     logger.info( "job updated: %j", job );
     res.status( 200 ).send( retCodes[ "200u" ] );
@@ -261,7 +262,7 @@ const prepareJob = async ( reqBody, jobId ) => {
 
   reqBody.recur.triggers[ 0 ] = fixCronExpression( reqBody.recur.triggers[ 0 ] );
 
-  const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( jobId ) ) );
+  const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobIdSelector( jobId ) ) );
 
   logger.info( "jobs found: %j", jobs.body.items );
 
@@ -307,7 +308,7 @@ exports.getJob = {
 
       logger.info( "getJob: %s", req.params.jobId );
 
-      const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( req.params.jobId ) ) );
+      const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobIdSelector( req.params.jobId ) ) );
 
       logger.info( "getJob, jobs found: %j", jobs );
 
@@ -354,7 +355,7 @@ exports.getAllJobs = {
 
       logger.info( "getAllJobs" );
 
-      const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobQuerySelector( req.url ) ) );
+      const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobQuerySelector( req.url ) ) );
 
       logger.info( "getAllJobs, jobs found: %j", jobs );
 
@@ -496,13 +497,13 @@ exports.deleteJob = {
 
       await doLock( async () => {
 
-        const jobs = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.get( jobIdSelector( req.params.jobId ) ) );
+        const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobIdSelector( req.params.jobId ) ) );
 
         const items = jobs.body.items;
 
         if ( !_.isEmpty( items ) ) {
 
-          const ret = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs( items[ 0 ].metadata.name ).delete() );
+          const ret = await doRetry( async () => await batchApi.cronjobs( items[ 0 ].metadata.name ).delete() );
 
           logger.info( "deleteJob result: %j", ret );
           res.status( 200 ).send( retCodes[ "200d" ] );
@@ -540,7 +541,7 @@ exports.deleteAllJobs = {
 
       logger.info( "deleteAllJobs" );
 
-      const ret = await doRetry( async () => await batchApi.namespaces( namespace ).cronjobs.delete( jobQuerySelector( req.url ) ) );
+      const ret = await doRetry( async () => await batchApi.cronjobs.delete( jobQuerySelector( req.url ) ) );
 
       logger.info( "deleteAllJobs result: %j", ret );
       res.status( 200 ).send( retCodes[ "200a" ] );

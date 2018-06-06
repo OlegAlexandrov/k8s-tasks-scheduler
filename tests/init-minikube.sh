@@ -32,3 +32,5 @@ minikube ip
 echo -e "\nK8 DNS configuration:\n"
 
 kubectl get ep kube-dns --namespace=kube-system
+
+kubectl create -f ./service.yml

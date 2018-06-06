@@ -1,9 +1,9 @@
-'''Create Job'''
+'''Create jobs'''
 -!|script|!-RestTools-!|
 |create job|${long_job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|
 |create job|${long_job_name_2}|uri|${request_uri_2}|recur|${cron_every_hour}  |
 
-'''Check all jobs'''
+'''Check jobs'''
 |query:http result as table|${service_url}${api_jobs}            |
 |name                      |request.uri     |recur.triggers.0    |
 |${long_job_name_1}        |${request_uri_1}|${cron_every_minute}|
@@ -19,6 +19,15 @@
 |name                      |request.uri         |recur.triggers.0      |
 |${long_job_name_2}        |${request_uri_2}    |${cron_every_hour}    |
 
+'''Update "${long_job_name_2}" job'''
+-!|script|!-RestTools-!|
+|update job|${long_job_name_2}|uri|${request_uri_3}|recur|${cron_every_minute}|
+
+'''Check "${long_job_name_2}" job'''
+|query:http result as table|${service_url}${api_jobs}${long_job_name_2}|
+|name                      |request.uri        |recur.triggers.0       |
+|${long_job_name_2}        |${request_uri_3}   |${cron_every_minute}   |
+
 '''Delete "${long_job_name_1}" job'''
 -!|script|!-RestTools-!|
 |DELETE|${service_url}${api_jobs}${long_job_name_1}|
@@ -26,7 +35,7 @@
 -!|script|!-RestTools-!|
 |wait all jobs length|1|
 
-'''Check all jobs'''
-|query:http result as table|${service_url}${api_jobs}          |
-|name                      |request.uri     |recur.triggers.0  |
-|${long_job_name_2}        |${request_uri_2}|${cron_every_hour}|
+'''Check jobs'''
+|query:http result as table|${service_url}${api_jobs}            |
+|name                      |request.uri     |recur.triggers.0    |
+|${long_job_name_2}        |${request_uri_3}|${cron_every_minute}|

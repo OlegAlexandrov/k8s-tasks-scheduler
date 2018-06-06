@@ -1,6 +1,6 @@
 {
   "name": "k8s-tasks-scheduler",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Task Scheduler written in nodejs, based on k8s cronjobs",
   "main": "index.js",
   "license": "MIT",
@@ -26,5 +26,9 @@
     "underscore": "1.9.0",
     "uuid": "3.2.1",
     "winston": "2.4.2"
+  },
+  "devDependencies": {
+    "mocha": "5.2.0",
+    "sinon": "5.0.10"
   }
 }
