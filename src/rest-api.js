@@ -31,7 +31,7 @@ const batchApi = k8sBatchApi.namespaces( namespace );
 
 const retCodes = {
 
-  "200":  { code: 200 },
+  "200":  { code: 200, message: "Ok." },
   "200u": { code: 200, message: "Job updated." },
   "200d": { code: 200, message: "Job deleted." },
   "200a": { code: 200, message: "All jobs deleted." },
@@ -295,7 +295,7 @@ exports.getJob = {
     path: "/jobs/{jobId}",
     method: "GET",
     nickname: "getJob",
-    description: "Get job by ID.",
+    summary: "Get job by ID.",
     type: "JobResponse",
     produces: [ "application/json" ],
     parameters: [ paramTypes.path( "jobId", "Id of job to fetch", "string" ) ],
@@ -342,7 +342,7 @@ exports.getAllJobs = {
     path: "/jobs",
     method: "GET",
     nickname: "getAllJobs",
-    description: "Get list of all jobs.",
+    summary: "Get list of all jobs.",
     type: "array",
     items: { $ref: "JobResponse" },
     produces: [ "application/json" ],
@@ -384,9 +384,9 @@ exports.addJob = {
     path: "/jobs",
     method: "POST",
     nickname: "addJob",
-    description: "Add a new job.",
-    parameters: [ paramTypes.body( "body", "Job object to add", "Job", undefined, true ) ],
+    summary: "Add a new job.",
     produces: [ "application/json" ],
+    parameters: [ paramTypes.body( "body", "Job object to add", "Job", undefined, true ) ],
     responseMessages: [ retCodes[ "201" ], retCodes[ "400" ], retCodes[ "409" ] ]
   },
 
@@ -434,9 +434,9 @@ exports.updateJob = {
     path: "/jobs/{jobId}",
     method: "PUT",
     nickname: "updateJob",
-    description: "Update or create a new job.",
-    parameters: [ paramTypes.path( "jobId", "Id of job to update", "string" ), paramTypes.body( "body", "Job object to add or update", "Job", undefined, true ) ],
+    summary: "Update existing or create a new job.",
     produces: [ "application/json" ],
+    parameters: [ paramTypes.path( "jobId", "Id of job to update", "string" ), paramTypes.body( "body", "Job object to add or update", "Job", undefined, true ) ],
     responseMessages: [ retCodes[ "200u" ], retCodes[ "201" ], retCodes[ "400" ] ]
   },
 
@@ -484,7 +484,8 @@ exports.deleteJob = {
     path: "/jobs/{jobId}",
     method: "DELETE",
     nickname: "deleteJob",
-    description: "Delete a job.",
+    summary: "Delete a job by ID.",
+    produces: [ "application/json" ],
     parameters: [ paramTypes.path( "jobId", "Id of job to delete", "string" ) ],
     responseMessages: [ retCodes[ "200d" ], retCodes[ "404" ] ]
   },
@@ -530,8 +531,8 @@ exports.deleteAllJobs = {
     path: "/jobs",
     method: "DELETE",
     nickname: "deleteAllJobs",
-    description: "Delete all jobs.",
-    parameters: [],
+    summary: "Delete all jobs.",
+    produces: [ "application/json" ],
     responseMessages: [ retCodes[ "200a" ] ]
   },
 

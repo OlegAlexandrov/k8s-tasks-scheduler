@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash
 
 #
 # Initialize minikube
@@ -6,6 +6,8 @@
 
 MINIKUBE_RELEASE="0.25.2"
 KUBECTL_RELEASE=$( curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt )
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "Downloading \"kubectl\" ..."
 
@@ -24,13 +26,9 @@ sudo minikube start --vm-driver=none --extra-config=apiserver.ServiceNodePortRan
 sudo chown -R $( id -u ):$( id -g ) $HOME/.kube
 sudo chown -R $( id -u ):$( id -g ) $HOME/.minikube
 
-echo "Minikube configuration"
-
 echo -e "\nCluster IP:"
 minikube ip
 
-echo -e "\nK8 DNS configuration:\n"
+echo
 
-kubectl get ep kube-dns --namespace=kube-system
-
-kubectl create -f ./service.yml
+kubectl create -f $DIR/service.yml

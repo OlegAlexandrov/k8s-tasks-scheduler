@@ -15,9 +15,14 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - port: 8081
+  - name: fitnesse
+    port: 8081
     targetPort: 8081
     nodePort: 8081
+  - name: scheduler
+    port: 8086
+    targetPort: 8086
+    nodePort: 8086
   selector:
     app: k8s-tasks-scheduler
 ---

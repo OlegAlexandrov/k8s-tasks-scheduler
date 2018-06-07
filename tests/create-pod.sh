@@ -11,6 +11,8 @@ export FITNESSE_ROOT="$DIR"/FitNesseRoot
 export FIXTURES="$DIR"/fixtures
 export SOURCES=$( cd "$DIR"/../src && pwd )
 
+git submodule update
+
 if [ "$1" == "dev" ]; then
 
   export SOURCES_VOLUME_MOUNT="volumeMounts:

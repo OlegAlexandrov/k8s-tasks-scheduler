@@ -48,7 +48,7 @@ module.exports.run = function( host, port ) {
     .addDelete( api.deleteAllJobs );
 
   swagger.configureSwaggerPaths( "", api_docs_path, "" );
-  swagger.configure( "http://" + host + ":" + port + api_path, api_version );
+  swagger.configure( api_path, api_version );
 
   app.get( ( new RegExp( "^\\" + docs_path + "(\/.*)?$" ) ), function( req, res, next ) {
 
