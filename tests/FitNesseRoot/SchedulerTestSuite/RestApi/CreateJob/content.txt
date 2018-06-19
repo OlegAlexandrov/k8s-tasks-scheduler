@@ -1,0 +1,54 @@
+'''Create job'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|type|${job_type_cron}|labels|{ "app": "${app_scheduler}" }|uri|${request_uri_1}|method|${method_put}|body|{ "data": "${request_data_value}" }|recur|${cron_never_run}|start|${recur_start}|end|${recur_end}|image|${busybox_latest}|args|${args_hello}|
+
+'''Check status code'''
+|query:last response as table      |
+|status_code|body.code|body.message|
+|201        |201      |Job created.|
+
+'''Check job'''
+|query:http result as table|${service_url}${api_jobs}${job_name_1}                                                                                                                                                                                     |
+|name                      |type            |labels.app      |request.uri     |request.method|request.body.data    |recur.triggers.0 |recur.start   |recur.end   |executor.image   |executor.args.0|executor.args.1|executor.args.2|active|lastSchedule|
+|${job_name_1}             |${job_type_cron}|${app_scheduler}|${request_uri_1}|${method_put} |${request_data_value}|${cron_never_run}|${recur_start}|${recur_end}|${busybox_latest}|${arg_hello_0} |${arg_hello_1} |${arg_hello_2} |False |=~/^$/      |
+
+'''Create job with empty name'''
+-!|script|!-RestTools-!|
+|create job||uri|${request_uri_1}|recur|${cron_every_minute}|
+
+'''Check status code'''
+|query:last response as table                  |
+|status_code|body.code|body.message            |
+|400        |400      |=~/Invalid request body/|
+
+'''Create job with empty scheduling'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur||
+
+'''Check status code'''
+|query:last response as table                  |
+|status_code|body.code|body.message            |
+|400        |400      |=~/Invalid request body/|
+
+'''Create job with existing name'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|
+
+'''Check status code'''
+|query:last response as table                 |
+|status_code|body.code|body.message           |
+|409        |409      |=~/Job.*already exists/|
+
+'''Create job with invalid name'''
+-!|script|!-RestTools-!|
+|create job|${invalid_job_name}|uri|${request_uri_1}|recur|${cron_every_minute}|
+
+'''Check status code'''
+|query:last response as table                 |
+|status_code|body.code|body.message           |
+|500        |500      |=~/invalid label value/|
+
+'''Check all jobs'''
+|query:http result as table|${service_url}${api_jobs}         |
+|name                      |request.uri     |recur.triggers.0 |
+|${job_name_1}             |${request_uri_1}|${cron_never_run}|

@@ -1,6 +1,4 @@
 node_modules
+.project
+.pydevproject
 *.tmp
-*.njsproj
-*.dat
-bin
-obj

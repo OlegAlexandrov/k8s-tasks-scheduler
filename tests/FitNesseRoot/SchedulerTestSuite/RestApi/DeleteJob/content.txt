@@ -1,0 +1,75 @@
+'''Create jobs'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|
+|create job|${job_name_2}|uri|${request_uri_2}|recur|${cron_never_run}   |
+|create job|${job_name_3}|uri|${request_uri_3}|recur|${cron_every_hour}  |
+
+'''Check jobs'''
+|query:http result as table|${service_url}${api_jobs}            |
+|name                      |request.uri     |recur.triggers.0    |
+|${job_name_1}             |${request_uri_1}|${cron_every_minute}|
+|${job_name_2}             |${request_uri_2}|${cron_never_run}   |
+|${job_name_3}             |${request_uri_3}|${cron_every_hour}  |
+
+'''Delete "${job_name_2}"'''
+-!|script|!-RestTools-!|
+|DELETE|${service_url}${api_jobs}${job_name_2}|
+
+'''Check response'''
+|query:last response as table      |
+|status_code|body.code|body.message|
+|200        |200      |Job deleted.|
+
+'''Wait for job to disappear'''
+-!|script|!-RestTools-!|
+|wait all jobs length|2|
+
+'''Check jobs'''
+|query:http result as table|${service_url}${api_jobs}            |
+|name                      |request.uri     |recur.triggers.0    |
+|${job_name_1}             |${request_uri_1}|${cron_every_minute}|
+|${job_name_3}             |${request_uri_3}|${cron_every_hour}  |
+
+'''Delete "${job_name_2}" again'''
+-!|script|!-RestTools-!|
+|DELETE|${service_url}${api_jobs}${job_name_2}|
+
+'''Check response'''
+|query:last response as table        |
+|status_code|body.code|body.message  |
+|404        |404      |Job not found.|
+
+'''Delete all jobs'''
+-!|script|!-RestTools-!|
+|DELETE|${service_url}${api_jobs}|
+
+'''Check response'''
+|query:last response as table           |
+|status_code|body.code|body.message     |
+|200        |200      |All jobs deleted.|
+
+'''Wait for jobs to disappear'''
+-!|script|!-RestTools-!|
+|wait all jobs length|0|
+
+'''Check jobs'''
+|query:http result as table|${service_url}${api_jobs}   |
+|name                      |request.uri|recur.triggers.0|
+
+'''Delete all jobs again'''
+-!|script|!-RestTools-!|
+|DELETE|${service_url}${api_jobs}|
+
+'''Check response'''
+|query:last response as table           |
+|status_code|body.code|body.message     |
+|200        |200      |All jobs deleted.|
+
+'''Delete "${invalid_job_name}"'''
+-!|script|!-RestTools-!|
+|DELETE|${service_url}${api_jobs}${invalid_job_name}|
+
+'''Check response'''
+|query:last response as table                 |
+|status_code|body.code|body.message           |
+|500        |500      |=~/invalid label value/|

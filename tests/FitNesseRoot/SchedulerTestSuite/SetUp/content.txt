@@ -1,0 +1,96 @@
+!*> Defines
+!define cron_every_minute {0/1 * * * *}
+!define cron_every_hour {0 0/1 * * *}
+!define cron_never_run {0 0 31 2 *}
+!define long_cron {0/1 * * * * ? ? ?}
+
+!define request_uri_1 {!-http://server.net-!}
+!define request_uri_2 {!-http://host.net-!}
+!define request_uri_3 {!-http://point.net-!}
+
+!define method_post (POST)
+!define method_put (PUT)
+
+!define service_url {!-http://127.0.0.1:8086-!}
+!define api_jobs {/api/jobs/}
+
+!define job_name_1 {job-1}
+!define job_name_2 {job-2}
+!define job_name_3 {job-3}
+!define job_name_4 {job-4}
+!define long_job_name_1 (!-969893ad-2fda-43ad-9c40-37388e304890-b01b2e51-2--b-4558-80bb-90573acaacc5-f4a05784-c5fe-4441-bad--abf69786a9af-!)
+!define long_job_name_2 (!-a306e0fa-eb03-43c5-ae82-0768e74ae2bf-5ec56cef-fc4f-4e78-9590-319062d8a751-!)
+!define invalid_job_name (job&name)
+
+!define labels_1 ({ "app": "Scheduler", "product": "First" })
+!define labels_2 ({ "app": "Scheduler", "product": "Second" })
+!define labels_3 ({ "app": "Cron", "product": "Second" })
+
+!define busybox (busybox)
+!define busybox_latest (busybox:latest)
+
+!define arg_hello_0 (/bin/sh)
+!define arg_hello_1 (-c)
+!define arg_hello_2 (date; echo Hello from cluster)
+!define args_hello ("${arg_hello_0}","${arg_hello_1}","${arg_hello_2}")
+
+!define arg_ls_0 (ls)
+!define arg_ls_1 (-al)
+!define args_ls ("${arg_ls_0}","${arg_ls_1}")
+
+!define arg_sleep_0 (sleep)
+!define arg_sleep_1 (5)
+!define args_sleep ("${arg_sleep_0}","${arg_sleep_1}")
+
+!define job_type_cron (CRON)
+!define app_scheduler (Scheduler)
+
+!define request_data_value (value)
+
+!define recur_start (2018-06-01T15:00:00.000Z)
+!define recur_end (2018-06-02T14:59:59.000Z)
+
+!define date_regexp (^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z)
+*!
+
+!*> Scenario Libraries
+|scenario|create job |name|uri                         |uri                        |recur                        |trigger                        |
+|POST    |${api_jobs}|    |{ "name": "@name", "request": { "uri": "@uri", "method": "${method_post}" }, "recur": { "triggers": [ "@trigger" ] } }|
+
+|scenario|create job |name|type       |type       |labels       |labels       |uri       |uri       |method       |method       |body       |body       |recur       |trigger       |start       |start       |end       |end       |image       |image       |args       |args      |
+|POST    |${api_jobs}|    |{ "name": "@name", "type": "@type", "labels": @labels, "request": { "uri": "@uri", "method": "@method", "body": @body }, "recur": { "triggers": [ "@trigger" ], "start": "@start", "end": "@end" }, "executor": { "image": "@image", "args": [ @args ] } }|
+
+|scenario|create job |name|uri                 |uri                 |recur                 |trigger                 |labels                 |labels                 |
+|POST    |${api_jobs}|    |{ "name": "@name", "request": { "uri": "@uri", "method": "${method_post}" }, "recur": { "triggers": [ "@trigger" ] }, "labels": @labels }|
+
+|scenario|create job |name|uri                 |uri                |recur                |trigger                |image                |image                |args                |args                |
+|POST    |${api_jobs}|    |{ "name": "@name", "request": { "uri": "@uri", "method": "${method_post}" }, "recur": { "triggers": [ "@trigger" ] }, "executor": { "image": "@image", "args": [ @args ] } }|
+
+|scenario|update job      |name|uri                 |uri                 |recur                 |trigger                |
+|PUT     |${api_jobs}@name|    |{"request":{"uri":"@uri", "method":"${method_post}"}, "recur":{"triggers":["@trigger"]}}|
+
+|scenario|update job      |name|type       |type       |labels       |labels       |uri       |uri       |method       |method       |body       |body       |recur       |trigger       |start       |start       |end       |end       |image       |image       |args       |args      |
+|PUT     |${api_jobs}@name|    |{ "name": "@name", "type": "@type", "labels": @labels, "request": { "uri": "@uri", "method": "@method", "body": @body }, "recur": { "triggers": [ "@trigger" ], "start": "@start", "end": "@end" }, "executor": { "image": "@image", "args": [ @args ] } }|
+
+|scenario|url|path  |response length|length                                           |
+|wait    |1  |second|30             |times url|@path|response array has length|@length|
+
+|scenario|wait all jobs length     |length                 |
+|url     |${service_url}${api_jobs}|response length|@length|
+*!
+
+!*> Import fixtures
+|import                |
+|fixtures.http_calls   |
+|fixtures.process_utils|
+
+-!|script|!-RestTools-!|
+|set host url      |${service_url}|
+|set retries number|0             |
+*!
+
+!*> Delete Jobs
+-!|script|!-RestTools-!|
+|DELETE              |${service_url}${api_jobs}|
+|wait all jobs length|0                        |
+*!

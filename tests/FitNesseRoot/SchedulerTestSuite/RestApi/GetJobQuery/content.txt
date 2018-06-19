@@ -1,0 +1,63 @@
+'''Create Jobs'''
+-!|script|!-RestTools-!|
+|create job|${long_job_name_1}|uri|${request_uri_1}|recur|${cron_every_minute}|labels|${labels_1}|
+|create job|${long_job_name_2}|uri|${request_uri_1}|recur|${cron_every_hour}  |labels|${labels_2}|
+|create job|${job_name_3}     |uri|${request_uri_2}|recur|${cron_every_minute}|labels|${labels_2}|
+|create job|${job_name_4}     |uri|${request_uri_2}|recur|${cron_every_hour}  |labels|${labels_3}|
+
+'''Check Jobs'''
+|query:http result as table|${service_url}${api_jobs}                                      |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|
+|${long_job_name_1}        |${request_uri_1}|${cron_every_minute}|Scheduler |First         |
+|${long_job_name_2}        |${request_uri_1}|${cron_every_hour}  |Scheduler |Second        |
+|${job_name_3}             |${request_uri_2}|${cron_every_minute}|Scheduler |Second        |
+|${job_name_4}             |${request_uri_2}|${cron_every_hour}  |Cron      |Second        |
+
+'''Query jobs by labels: ${labels_2}'''
+|query:http result as table|${service_url}${api_jobs}?app=Scheduler&product=Second         |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|
+|${long_job_name_2}        |${request_uri_1}|${cron_every_hour}  |Scheduler |Second        |
+|${job_name_3}             |${request_uri_2}|${cron_every_minute}|Scheduler |Second        |
+
+'''Check response'''
+|query:last response as table|
+|status_code                 |
+|200                         |
+
+'''Query jobs by label: { "product": "First" }'''
+|query:http result as table|${service_url}${api_jobs}?product=First                        |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|
+|${long_job_name_1}        |${request_uri_1}|${cron_every_minute}|Scheduler |First         |
+
+'''Query jobs by label: { "product": "Second" }'''
+|query:http result as table|${service_url}${api_jobs}?product=Second                       |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|
+|${long_job_name_2}        |${request_uri_1}|${cron_every_hour}  |Scheduler |Second        |
+|${job_name_3}             |${request_uri_2}|${cron_every_minute}|Scheduler |Second        |
+|${job_name_4}             |${request_uri_2}|${cron_every_hour}  |Cron      |Second        |
+
+'''Query jobs by label: { "app": "Scheduler" }'''
+|query:http result as table|${service_url}${api_jobs}?app=Scheduler                        |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|
+|${long_job_name_1}        |${request_uri_1}|${cron_every_minute}|Scheduler |First         |
+|${long_job_name_2}        |${request_uri_1}|${cron_every_hour}  |Scheduler |Second        |
+|${job_name_3}             |${request_uri_2}|${cron_every_minute}|Scheduler |Second        |
+
+'''Query jobs by label: { "app": "Cron" }'''
+|query:http result as table|${service_url}${api_jobs}?app=Cron                           |
+|name                      |request.uri     |recur.triggers.0  |labels.app|labels.product|
+|${job_name_4}             |${request_uri_2}|${cron_every_hour}|Cron      |Second        |
+
+'''Query jobs by labels: { "app": "Cron", "product": "First" }'''
+|query:http result as table|${service_url}${api_jobs}?app=Cron&product=First      |
+|name                      |request.uri|recur.triggers.0|labels.app|labels.product|
+
+'''Query jobs by labels: { "app": "Scheduler", "product": "First" }'''
+|query:http result as table|${service_url}${api_jobs}?app=Scheduler&product=First          |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|
+|${long_job_name_1}        |${request_uri_1}|${cron_every_minute}|Scheduler |First         |
+
+'''Query jobs by invalid labels'''
+|query:response as table|${service_url}${api_jobs}?app=Scheduler&product=Sec@nd|
+|status_code            |body.message                                          |
+|500                    |=~/invalid label value/                               |

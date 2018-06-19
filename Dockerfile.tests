@@ -1,0 +1,13 @@
+#
+# Dockerfile for unit tests
+#
+
+ARG NODE_VERSION_ARG
+
+FROM node:$NODE_VERSION_ARG-alpine as npms
+
+WORKDIR /root
+COPY ./package.json ./
+
+RUN npm install .
+RUN npm dedupe

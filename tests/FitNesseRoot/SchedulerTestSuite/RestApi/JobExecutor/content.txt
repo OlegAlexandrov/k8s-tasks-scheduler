@@ -1,0 +1,49 @@
+!*> Defines
+!define job_spec_path (.items[0].spec.jobTemplate.spec.template.spec)
+!define env_path (${job_spec_path}.containers[0].env[0])
+!define container_path (containers.0)
+
+!define cronjob_selector (/binaries/kubectl get cronjobs --selector=id0=)
+*!
+
+'''Create job with default executor and custom args'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${cron_every_hour}|image||args|${args_hello}|
+
+'''Check job executor'''
+|query:command result as table|bash -c "${cronjob_selector}Z${job_name_1}Z -o json !-|-! jq '${job_spec_path}'"                                                                       |
+|${container_path}.image      |${container_path}.args.0|${container_path}.args.1|${container_path}.args.2|${container_path}.env.0.name|${container_path}.imagePullPolicy|restartPolicy|
+|${busybox}                   |${arg_hello_0}          |${arg_hello_1}          |${arg_hello_2}          |JOB                         |!-IfNotPresent-!                 |!-OnFailure-!|
+
+'''Check job executor env'''
+|query:command result as table|${cronjob_selector}Z${job_name_1}Z -o jsonpath="{${env_path}.value}"                                             |
+|name                         |request.method|request.uri     |recur.triggers.0  |executor.image|executor.args.0|executor.args.1|executor.args.2|
+|${job_name_1}                |${method_post}|${request_uri_1}|${cron_every_hour}|=~/^$/        |${arg_hello_0} |${arg_hello_1} |${arg_hello_2} |
+
+'''Create job with custom executor and no args'''
+-!|script|!-RestTools-!|
+|create job|${job_name_2}|uri|${request_uri_2}|recur|${cron_never_run}|image|${busybox_latest}|args||
+
+'''Check job executor'''
+|query:command result as table|bash -c "${cronjob_selector}Z${job_name_2}Z -o json !-|-! jq '${job_spec_path}'"                   |
+|${container_path}.image      |${container_path}.args|${container_path}.env.0.name|${container_path}.imagePullPolicy|restartPolicy|
+|${busybox_latest}            |=~/^$/                |JOB                         |!-IfNotPresent-!                 |!-OnFailure-!|
+
+'''Check job executor env'''
+|query:command result as table|${cronjob_selector}Z${job_name_2}Z -o jsonpath="{${env_path}.value}"             |
+|name                         |request.method|request.uri     |recur.triggers.0 |executor.image   |executor.args|
+|${job_name_2}                |${method_post}|${request_uri_2}|${cron_never_run}|${busybox_latest}|[]           |
+
+'''Create job with custom executor, custom args and data'''
+-!|script|!-RestTools-!|
+|create job|${job_name_3}|type|${job_type_cron}|labels|{ "app": "${app_scheduler}" }|uri|${request_uri_3}|method|${method_put}|body|{ "data": "${request_data_value}" }|recur|${cron_every_minute}|start|${recur_start}|end|${recur_end}|image|${busybox_latest}|args|${args_ls}|
+
+'''Check job executor'''
+|query:command result as table|bash -c "${cronjob_selector}Z${job_name_3}Z -o json !-|-! jq '${job_spec_path}'"                                              |
+|${container_path}.image      |${container_path}.args.0|${container_path}.args.1|${container_path}.env.0.name|${container_path}.imagePullPolicy|restartPolicy|
+|${busybox_latest}            |${arg_ls_0}             |${arg_ls_1}             |JOB                         |!-IfNotPresent-!                 |!-OnFailure-!|
+
+'''Check job executor env'''
+|query:command result as table|${cronjob_selector}Z${job_name_3}Z -o jsonpath="{${env_path}.value}"                                                                                                                      |
+|name                         |type            |labels.app      |request.method|request.uri     |request.body.data    |recur.triggers.0    |recur.start   |recur.end   |executor.image   |executor.args.0|executor.args.1|
+|${job_name_3}                |${job_type_cron}|${app_scheduler}|${method_put} |${request_uri_3}|${request_data_value}|${cron_every_minute}|${recur_start}|${recur_end}|${busybox_latest}|${arg_ls_0}    |${arg_ls_1}    |

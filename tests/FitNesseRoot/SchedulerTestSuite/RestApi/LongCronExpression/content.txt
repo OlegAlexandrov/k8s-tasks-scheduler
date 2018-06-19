@@ -1,0 +1,8 @@
+'''Create Job'''
+-!|script|!-RestTools-!|
+|create job|${job_name_1}|uri|${request_uri_1}|recur|${long_cron}|
+
+'''Cron expression is truncated'''
+|query:http result as table|${service_url}${api_jobs}            |
+|name                      |request.uri     |recur.triggers.0    |
+|${job_name_1}             |${request_uri_1}|${cron_every_minute}|
