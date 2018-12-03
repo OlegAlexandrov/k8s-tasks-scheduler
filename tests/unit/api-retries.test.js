@@ -52,7 +52,7 @@ const addJobReq = {
 const updateJobReq = {
 
   params: {
-    
+
     jobId: "job-1"
   },
 
@@ -130,7 +130,7 @@ const doTest = async ( apiStubs, method, req, response ) => {
   const send = sinon.stub();
   const res = { status: ( code ) => { return { send: send } }, send: send };
 
-  await api[ method ].action( req, res );
+  await api[ method ]( req, res );
 
   assert.equal( send.callCount, 1 );
   assert.deepEqual( send.getCall( 0 ).args[ 0 ], response );

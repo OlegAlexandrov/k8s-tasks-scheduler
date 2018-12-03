@@ -42,7 +42,7 @@ const addJobReq = {
 const updateJobReq = {
 
   params: {
-    
+
     jobId: "job-1"
   },
 
@@ -129,7 +129,7 @@ describe( "API locks", () => {
 
     const addJobAgain = ( resolve ) => {
 
-      api.addJob.action( addJobReq, res ).then( finish );
+      api.addJob( addJobReq, res ).then( finish );
       resolve( jobsEmptyResponse );
     }
 
@@ -140,9 +140,9 @@ describe( "API locks", () => {
 
     const api = require( apiModName );
 
-    api.addJob.action( addJobReq, res );
+    api.addJob( addJobReq, res );
   });
-  
+
   it( "update job", ( done ) => {
 
     const send = sinon.stub();
@@ -174,7 +174,7 @@ describe( "API locks", () => {
 
     const updateJobAgain = ( resolve ) => {
 
-      api.updateJob.action( updateJobReq, res ).then( finish );
+      api.updateJob( updateJobReq, res ).then( finish );
       resolve( jobsEmptyResponse );
     }
 
@@ -187,7 +187,7 @@ describe( "API locks", () => {
 
     const api = require( apiModName );
 
-    api.updateJob.action( updateJobReq, res );
+    api.updateJob( updateJobReq, res );
   });
 
   it( "delete job", ( done ) => {
@@ -215,7 +215,7 @@ describe( "API locks", () => {
 
     const deleteJobAgain = ( resolve ) => {
 
-      api.deleteJob.action( deleteJobReq, res ).then( finish );
+      api.deleteJob( deleteJobReq, res ).then( finish );
       resolve( jobsResponse );
     }
 
@@ -227,6 +227,6 @@ describe( "API locks", () => {
 
     const api = require( apiModName );
 
-    api.deleteJob.action( deleteJobReq, res );
+    api.deleteJob( deleteJobReq, res );
   });
 });

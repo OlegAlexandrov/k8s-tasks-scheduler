@@ -85,7 +85,7 @@ const testExecutor = async ( name ) => {
 
   const api = requireApiMod( batchApiDefault );
 
-  await api.addJob.action( addJobReq, res );
+  await api.addJob( addJobReq, res );
 
   assert.equal( post.getCall( 0 ).args[ 0 ].body.spec.jobTemplate.spec.template.spec.containers[ 0 ].image, name );
 }
