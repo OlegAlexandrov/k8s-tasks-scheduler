@@ -1,99 +1,277 @@
 //
 // Models
 //
+module.exports = {
 
+  swagger: "2.0",
+  basePath: "/api",
+  info: {
 
-module.exports.models = {
-
-  recurrence: {
-
-    id: "recurrence",
-    required: [ "triggers" ],
-
-    properties: {
-
-      start: { type: "string", defaultValue: null },
-      triggers: { type: "array", items: { type: "string" } },
-      end: { type: "string", defaultValue: null }
-    }
+    description: "Kubernetes tasks scheduler",
+    version: "1.0.7",
+    title: "k8s-tasks-scheduler"
   },
-
-  request_body: {
-
-    id: "request_body",
-    type: "object",
-    additionalProperties: true
-  },
-
-  request: {
-
-    id: "request",
-    required: [ "uri" ],
-
-    properties: {
-
-      uri: { type: "string" },
-
-      method: {
-
-        type: "string",
-        enum: [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
-        defaultValue: "POST"
+  schemes: [
+    "http"
+  ],
+  paths: {
+    "/jobs/{jobId}": {
+      get: {
+        summary: "Get job by ID",
+        description: "Returns single job",
+        produces: [ "application/json" ],
+        handler: "getJob",
+        parameters: [
+          {
+            in: "query",
+            name: "jobId",
+            description: "Id of job to fetch",
+            required: true,
+            type: "string"
+          }
+        ],
+        responses: {
+          "200": {
+            schema: {
+              $ref: "#/definitions/JobResponse"
+            }
+          },
+          "404": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          }
+        }
       },
-
-      body: { $ref: "request_body", defaultValue: {} }
+      put: {
+        summary: "Update existing or create a new job",
+        description: "Updates or creates job",
+        produces: [ "application/json" ],
+        handler: "updateJob",
+        parameters: [
+          {
+            in: "query",
+            name: "jobId",
+            description: "Id of job to update or create",
+            required: true,
+            type: "string"
+          },
+          {
+            in: "body",
+            name: "body",
+            description: "Job data",
+            required: true,
+            schema: {
+              $ref: "#/definitions/Job"
+            }
+          }
+        ],
+        responses: {
+          "200": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          },
+          "201": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          },
+          "400": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          }
+        }
+      },
+      delete: {
+        summary: "Delete a job by ID",
+        description: "Deletes specified job",
+        produces: [ "application/json" ],
+        handler: "deleteJob",
+        parameters: [
+          {
+            in: "query",
+            name: "jobId",
+            description: "Id of job to delete",
+            required: true,
+            type: "string"
+          }
+        ],
+        responses: {
+          "200": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          },
+          "404": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          }
+        }
+      }
+    },
+    "/jobs": {
+      get: {
+        summary: "Get list of all jobs",
+        description: "Returns list of jobs",
+        produces: [ "application/json" ],
+        handler: "getAllJobs",
+        parameters: [],
+        responses: {
+          "200": {
+            schema: {
+              type: "array",
+              items: {
+                $ref: "#/definitions/JobResponse"
+              }
+            }
+          },
+          "500": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          }
+        }
+      },
+      post: {
+        summary: "Add a new job",
+        description: "Adds new job",
+        produces: [ "application/json" ],
+        handler: "addJob",
+        parameters: [
+          {
+            in: "body",
+            name: "body",
+            description: "Job data",
+            required: true,
+            schema: {
+              $ref: "#/definitions/Job"
+            }
+          }
+        ],
+        responses: {
+          "201": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          },
+          "400": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          },
+          "409": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          }
+        }
+      },
+      delete: {
+        summary: "Delete all jobs",
+        description: "Deletes all jobs",
+        produces: [ "application/json" ],
+        handler: "deleteAllJobs",
+        parameters: [],
+        responses: {
+          "200": {
+            schema: {
+              $ref: "#/definitions/MessageResponse"
+            }
+          }
+        }
+      }
     }
   },
+  definitions: {
 
-  executor: {
+    recurrence: {
 
-    id: "executor",
+      type: "object",
+      required: [ "triggers" ],
+      properties: {
 
-    properties: {
+        start: { type: "string", default: null },
+        triggers: { type: "array", items: { type: "string" } },
+        end: { type: "string", default: null }
+      },
+    },
+    request_body: {
 
-      image: { type: "string", defaultValue: null },
-      args: { type: "array", items: { type: "string" } }
-    }
-  },
+      type: "object",
+      additionalProperties: true
+    },
+    request: {
 
-  labels: {
+      type: "object",
+      required: [ "uri" ],
+      properties: {
 
-    id: "labels",
-    type: "object",
-    additionalProperties: { type: "string" }
-  },
+        uri: { type: "string" },
+        method: {
 
-  Job: {
+          type: "string",
+          enum: [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
+          default: "POST"
+        },
+        body: { $ref: "#/definitions/request_body", default: {} }
+      }
+    },
+    executor: {
 
-    id: "Job",
-    required: [ "name", "recur" ],
+      type: "object",
+      properties: {
 
-    properties: {
+        image: { type: "string", default: null },
+        args: { type: "array", items: { type: "string" } }
+      }
+    },
+    labels: {
 
-      name: { type: "string" },
-      type: { type: "string" },
-      labels: { $ref: "labels" },
-      request: { $ref: "request" },
-      recur: { $ref: "recurrence" },
-      executor: { $ref: "executor" }
-    }
-  },
+      id: "labels",
+      type: "object",
+      additionalProperties: { type: "string" }
+    },
+    Job: {
 
-  JobResponse: {
+      type: "object",
+      required: [ "name", "recur" ],
+      properties: {
 
-    id: "Job",
-    required: [ "name", "recur" ],
+        name: { type: "string" },
+        type: { type: "string" },
+        labels: { $ref: "#/definitions/labels" },
+        request: { $ref: "#/definitions/request" },
+        recur: { $ref: "#/definitions/recurrence" },
+        executor: { $ref: "#/definitions/executor" }
+      }
+    },
+    JobResponse: {
 
-    properties: {
+      type: "object",
+      required: [ "name", "recur" ],
+      properties: {
 
-      name: { type: "string" },
-      type: { type: "string" },
-      labels: { $ref: "labels" },
-      request: { $ref: "request" },
-      recur: { $ref: "recurrence" },
-      executor: { $ref: "executor" },
-      active: { type: "boolean" },
-      lastSchedule: { type: "string" }
+        name: { type: "string" },
+        type: { type: "string" },
+        labels: { $ref: "#/definitions/labels" },
+        request: { $ref: "#/definitions/request" },
+        recur: { $ref: "#/definitions/recurrence" },
+        executor: { $ref: "#/definitions/executor" },
+        active: { type: "boolean" },
+        lastSchedule: { type: "string" }
+      }
+    },
+    MessageResponse: {
+
+      type: "object",
+      required: [ "message" ],
+      properties: {
+
+        message: { type: "string" }
+      }
     }
   }
 };
