@@ -9,11 +9,13 @@ ARG NODE_VERSION_ARG
 FROM node:$NODE_VERSION_ARG-alpine as npms
 
 WORKDIR /root
+
 COPY ./package.json ./
 COPY ./package-lock.json ./
 
-RUN npm install . --production
-RUN npm dedupe
+RUN npm install --production
+RUN npm audit fix
+RUN npm audit
 
 # 2. Build image
 

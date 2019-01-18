@@ -4,10 +4,13 @@
 
 ARG NODE_VERSION_ARG
 
-FROM node:$NODE_VERSION_ARG-alpine as npms
+FROM node:$NODE_VERSION_ARG-alpine
 
 WORKDIR /root
+
 COPY ./package.json ./
 
-RUN npm install . --production
+RUN npm install
 RUN npm dedupe
+RUN npm audit fix
+RUN npm audit
