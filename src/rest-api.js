@@ -3,7 +3,6 @@
 //
 
 
-const paramTypes = require( "swagger-node-express" ).paramTypes;
 const _ = require( "underscore" );
 const uuid = require( "uuid/v4" );
 const url = require( "url" );
@@ -107,7 +106,7 @@ const labelSelector = ( labels ) => {
 
   let selector = "";
 
-  Object.entries( labels ).forEach( ( label ) => { 
+  Object.entries( labels ).forEach( ( label ) => {
 
     if ( !_.isEmpty( selector ) ) { selector += ","; }
     selector += `${ label[ 0 ] }=${ label[ 1 ] }`;
@@ -146,7 +145,7 @@ const cronJob = ( name, reqBody ) => {
 
   const job = {
 
-    kind: "CronJob", 
+    kind: "CronJob",
 
     metadata: {
 
@@ -183,7 +182,7 @@ const cronJob = ( name, reqBody ) => {
             }
           }
         }
-      }  
+      }
     }
   };
 
@@ -288,269 +287,184 @@ const fillJob = ( job ) => {
   return data;
 }
 
-exports.getJob = {
+exports.getJob = async ( req, res ) => {
 
-  spec: {
+  try {
 
-    path: "/jobs/{jobId}",
-    method: "GET",
-    nickname: "getJob",
-    summary: "Get job by ID.",
-    type: "JobResponse",
-    produces: [ "application/json" ],
-    parameters: [ paramTypes.path( "jobId", "Id of job to fetch", "string" ) ],
-    responseMessages: [ retCodes[ "200" ], retCodes[ "404" ] ]
-  },
+    logger.info( "getJob: %s", req.params.jobId );
 
-  action: async ( req, res ) => {
+    const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobIdSelector( req.params.jobId ) ) );
+
+    logger.info( "getJob, jobs found: %j", jobs );
+
+    const items = jobs.body.items;
+
+    if ( !_.isEmpty( items ) ) {
+
+      const data = fillJob( items[ 0 ] );
+
+      logger.info( "getJob result: %j", data );
+      res.send( data );
+    }
+    else {
+
+      logger.error( "getJob: job not found" );
+      res.status( 404 ).send( retCodes[ "404" ] );
+    }
+  }
+  catch( err ) {
+
+    logger.error( "getJob error:", err );
+    res.status( 500 ).send( retCode500( err.message ) );
+  }
+};
+
+exports.getAllJobs = async ( req, res ) => {
+
+  try {
+
+    logger.info( "getAllJobs" );
+
+    const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobQuerySelector( req.url ) ) );
+
+    logger.info( "getAllJobs, jobs found: %j", jobs );
+
+    let data = [];
+
+    jobs.body.items.forEach( ( job ) => {
+
+      data.push( fillJob( job ) );
+    });
+
+    logger.info( "getAllJobs result: %j", data );
+    res.send( data );
+  }
+  catch( err ) {
+
+    logger.error( "getAllJobs error:", err );
+    res.status( 500 ).send( retCode500( err.message ) );
+  }
+};
+
+exports.addJob = async ( req, res ) => {
+
+  logger.info( "addJob: %j", req.body );
+
+  if ( _.isEmpty( req.body ) || !req.body.name || !IsRecurValid( req.body.recur ) ) {
+
+    logger.error( "addJob error: %s", retCodes[ "400" ].message );
+    res.status( 400 ).send( retCodes[ "400" ] );
+  }
+  else {
 
     try {
 
-      logger.info( "getJob: %s", req.params.jobId );
+      await doLock( async () => {
+
+        const items = await prepareJob( req.body, req.body.name );
+
+        if ( !_.isEmpty( items ) ) {
+
+          logger.error( `addJob, ${ retCodes[ "409" ].message }: %j`, items[ 0 ] );
+          res.status( 409 ).send( retCodes[ "409" ] );
+        }
+        else {
+
+          await doAddJob( req.body, res );
+        }
+      });
+    }
+    catch( err ) {
+
+      logger.error( "addJob error:", err );
+      res.status( 500 ).send( retCode500( err.message ) );
+    }
+  }
+};
+
+exports.updateJob = async ( req, res ) => {
+
+  logger.info( "updateJob: %j", req.body );
+
+  if ( _.isEmpty( req.body ) || !req.params.jobId || !IsRecurValid( req.body.recur ) ) {
+
+    logger.error( "updateJob error: %s", retCodes[ "400" ].message );
+    res.status( 400 ).send( retCodes[ "400" ] );
+  }
+  else {
+
+    try {
+
+      await doLock( async () => {
+
+        req.body.name = req.params.jobId;
+        const items = await prepareJob( req.body, req.params.jobId );
+
+        if ( !_.isEmpty( items ) ) {
+
+          await doUpdateJob( items[ 0 ].metadata.name, req.body, res );
+        }
+        else {
+
+          await doAddJob( req.body, res );
+        }
+      });
+    }
+    catch( err ) {
+
+      logger.error( "updateJob error:", err );
+      res.status( 500 ).send( retCode500( err.message ) );
+    }
+  }
+};
+
+exports.deleteJob = async ( req, res ) => {
+
+  try {
+
+    logger.info( "deleteJob: %s", req.params.jobId );
+
+    await doLock( async () => {
 
       const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobIdSelector( req.params.jobId ) ) );
-
-      logger.info( "getJob, jobs found: %j", jobs );
 
       const items = jobs.body.items;
 
       if ( !_.isEmpty( items ) ) {
 
-        const data = fillJob( items[ 0 ] );
+        const ret = await doRetry( async () => await batchApi.cronjobs( items[ 0 ].metadata.name ).delete() );
 
-        logger.info( "getJob result: %j", data );
-        res.send( data );
+        logger.info( "deleteJob result: %j", ret );
+        res.status( 200 ).send( retCodes[ "200d" ] );
       }
       else {
 
-        logger.error( "getJob: job not found" );
+        logger.error( "deleteJob: job not found" );
         res.status( 404 ).send( retCodes[ "404" ] );
       }
-    }
-    catch( err ) {
+    });
+  }
+  catch( err ) {
 
-      logger.error( "getJob error:", err );
-      res.status( 500 ).send( retCode500( err.message ) );
-    }
+    logger.error( "deleteJob error:", err );
+    res.status( 500 ).send( retCode500( err.message ) );
   }
 };
 
-exports.getAllJobs = {
+exports.deleteAllJobs = async ( req, res ) => {
 
-  spec: {
+  try {
 
-    path: "/jobs",
-    method: "GET",
-    nickname: "getAllJobs",
-    summary: "Get list of all jobs.",
-    type: "array",
-    items: { $ref: "JobResponse" },
-    produces: [ "application/json" ],
-    responseMessages: [ retCodes[ "200" ] ]
-  },
+    logger.info( "deleteAllJobs" );
 
-  action: async ( req, res ) => {
+    const ret = await doRetry( async () => await batchApi.cronjobs.delete( jobQuerySelector( req.url ) ) );
 
-    try {
-
-      logger.info( "getAllJobs" );
-
-      const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobQuerySelector( req.url ) ) );
-
-      logger.info( "getAllJobs, jobs found: %j", jobs );
-
-      let data = [];
-
-      jobs.body.items.forEach( ( job ) => {
-
-        data.push( fillJob( job ) );
-      });
-
-      logger.info( "getAllJobs result: %j", data );
-      res.send( data );
-    }
-    catch( err ) {
-
-      logger.error( "getAllJobs error:", err );
-      res.status( 500 ).send( retCode500( err.message ) );
-    }
+    logger.info( "deleteAllJobs result: %j", ret );
+    res.status( 200 ).send( retCodes[ "200a" ] );
   }
-};
+  catch( err ) {
 
-exports.addJob = {
-
-  spec: {
-
-    path: "/jobs",
-    method: "POST",
-    nickname: "addJob",
-    summary: "Add a new job.",
-    produces: [ "application/json" ],
-    parameters: [ paramTypes.body( "body", "Job object to add", "Job", undefined, true ) ],
-    responseMessages: [ retCodes[ "201" ], retCodes[ "400" ], retCodes[ "409" ] ]
-  },
-
-  action: async ( req, res ) => {
-
-    logger.info( "addJob: %j", req.body );
-
-    if ( _.isEmpty( req.body ) || !req.body.name || !IsRecurValid( req.body.recur ) ) {
-
-      logger.error( "addJob error: %s", retCodes[ "400" ].message );
-      res.status( 400 ).send( retCodes[ "400" ] );
-    }
-    else {
-
-      try {
-
-        await doLock( async () => {
-
-          const items = await prepareJob( req.body, req.body.name );
-
-          if ( !_.isEmpty( items ) ) {
-
-            logger.error( `addJob, ${ retCodes[ "409" ].message }: %j`, items[ 0 ] );
-            res.status( 409 ).send( retCodes[ "409" ] );
-          }
-          else {
-
-            await doAddJob( req.body, res );
-          }
-        });
-      }
-      catch( err ) {
-
-        logger.error( "addJob error:", err );
-        res.status( 500 ).send( retCode500( err.message ) );
-      }
-    }
-  }
-};
-
-exports.updateJob = {
-
-  spec: {
-
-    path: "/jobs/{jobId}",
-    method: "PUT",
-    nickname: "updateJob",
-    summary: "Update existing or create a new job.",
-    produces: [ "application/json" ],
-    parameters: [ paramTypes.path( "jobId", "Id of job to update", "string" ), paramTypes.body( "body", "Job object to add or update", "Job", undefined, true ) ],
-    responseMessages: [ retCodes[ "200u" ], retCodes[ "201" ], retCodes[ "400" ] ]
-  },
-
-  action: async ( req, res ) => {
-
-    logger.info( "updateJob: %j", req.body );
-
-    if ( _.isEmpty( req.body ) || !req.params.jobId || !IsRecurValid( req.body.recur ) ) {
-
-      logger.error( "updateJob error: %s", retCodes[ "400" ].message );
-      res.status( 400 ).send( retCodes[ "400" ] );
-    }
-    else {
-
-      try {
-
-        await doLock( async () => {
-
-          req.body.name = req.params.jobId;
-          const items = await prepareJob( req.body, req.params.jobId );
-
-          if ( !_.isEmpty( items ) ) {
-
-            await doUpdateJob( items[ 0 ].metadata.name, req.body, res );
-          }
-          else {
-
-            await doAddJob( req.body, res );
-          }
-        });
-      }
-      catch( err ) {
-
-        logger.error( "updateJob error:", err );
-        res.status( 500 ).send( retCode500( err.message ) );
-      }
-    }
-  }
-};
-
-exports.deleteJob = {
-
-  spec: {
-
-    path: "/jobs/{jobId}",
-    method: "DELETE",
-    nickname: "deleteJob",
-    summary: "Delete a job by ID.",
-    produces: [ "application/json" ],
-    parameters: [ paramTypes.path( "jobId", "Id of job to delete", "string" ) ],
-    responseMessages: [ retCodes[ "200d" ], retCodes[ "404" ] ]
-  },
-
-  action: async ( req, res ) => {
-
-    try {
-
-      logger.info( "deleteJob: %s", req.params.jobId );
-
-      await doLock( async () => {
-
-        const jobs = await doRetry( async () => await batchApi.cronjobs.get( jobIdSelector( req.params.jobId ) ) );
-
-        const items = jobs.body.items;
-
-        if ( !_.isEmpty( items ) ) {
-
-          const ret = await doRetry( async () => await batchApi.cronjobs( items[ 0 ].metadata.name ).delete() );
-
-          logger.info( "deleteJob result: %j", ret );
-          res.status( 200 ).send( retCodes[ "200d" ] );
-        }
-        else {
-
-          logger.error( "deleteJob: job not found" );
-          res.status( 404 ).send( retCodes[ "404" ] );
-        }
-      });
-    }
-    catch( err ) {
-
-      logger.error( "deleteJob error:", err );
-      res.status( 500 ).send( retCode500( err.message ) );
-    }
-  }
-};
-
-exports.deleteAllJobs = {
-
-  spec: {
-
-    path: "/jobs",
-    method: "DELETE",
-    nickname: "deleteAllJobs",
-    summary: "Delete all jobs.",
-    produces: [ "application/json" ],
-    responseMessages: [ retCodes[ "200a" ] ]
-  },
-
-  action: async ( req, res ) => {
-
-    try {
-
-      logger.info( "deleteAllJobs" );
-
-      const ret = await doRetry( async () => await batchApi.cronjobs.delete( jobQuerySelector( req.url ) ) );
-
-      logger.info( "deleteAllJobs result: %j", ret );
-      res.status( 200 ).send( retCodes[ "200a" ] );
-    }
-    catch( err ) {
-
-      logger.error( "deleteAllJobs error:", err );
-      res.status( 500 ).send( retCode500( err.message ) );
-    }
+    logger.error( "deleteAllJobs error:", err );
+    res.status( 500 ).send( retCode500( err.message ) );
   }
 };
