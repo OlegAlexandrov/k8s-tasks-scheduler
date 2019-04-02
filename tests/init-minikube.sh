@@ -4,7 +4,7 @@
 # Initialize minikube
 #
 
-MINIKUBE_RELEASE="0.28.2"
+MINIKUBE_RELEASE="1.0.0"
 KUBECTL_RELEASE=$( curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt )
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
