@@ -21,7 +21,7 @@ curl -s -Lo minikube https://storage.googleapis.com/minikube/releases/v$MINIKUBE
 chmod +x ./minikube
 sudo mv ./minikube /usr/local/bin/
 
-sudo minikube start --vm-driver=none --extra-config=apiserver.ServiceNodePortRange=1000-10000
+sudo minikube start --vm-driver=none --extra-config=apiserver.service-node-port-range=1000-10000
 
 sudo chown -R $( id -u ):$( id -g ) $HOME/.kube
 sudo chown -R $( id -u ):$( id -g ) $HOME/.minikube
