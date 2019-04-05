@@ -4,7 +4,7 @@
 # Initialize minikube
 #
 
-MINIKUBE_RELEASE="0.25.2"
+MINIKUBE_RELEASE="1.0.0"
 KUBECTL_RELEASE=$( curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt )
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -21,7 +21,7 @@ curl -s -Lo minikube https://storage.googleapis.com/minikube/releases/v$MINIKUBE
 chmod +x ./minikube
 sudo mv ./minikube /usr/local/bin/
 
-sudo minikube start --vm-driver=none --extra-config=apiserver.ServiceNodePortRange=1000-10000
+sudo minikube start --vm-driver=none --extra-config=apiserver.service-node-port-range=1000-10000
 
 sudo chown -R $( id -u ):$( id -g ) $HOME/.kube
 sudo chown -R $( id -u ):$( id -g ) $HOME/.minikube

@@ -9,18 +9,20 @@ ARG NODE_VERSION_ARG
 FROM node:$NODE_VERSION_ARG-alpine as npms
 
 WORKDIR /root
+
 COPY ./package.json ./
 COPY ./package-lock.json ./
 
-RUN npm install . --production
-RUN npm dedupe
+RUN npm install --production
+RUN npm audit fix --production
+RUN npm audit
 
 # 2. Build image
 
 FROM node:$NODE_VERSION_ARG-alpine
 
 RUN apk update
-RUN apk add curl bash
+RUN apk add --no-cache curl bash
 
 RUN mkdir -p /scheduler/src
 
