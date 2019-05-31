@@ -1,8 +1,8 @@
-﻿//
+//
 // Logger
 //
 
-const winston = require( "winston" );
+const winston = require('winston')
 
-winston.handleExceptions( new winston.transports.Console( { colorize: true } ) );
-module.exports = winston;
+winston.handleExceptions(new winston.transports.Console({ colorize: true }))
+module.exports = winston
