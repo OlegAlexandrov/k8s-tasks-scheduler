@@ -9,7 +9,7 @@
     "url": "https://github.com/OlegAlexandrov/k8s-tasks-scheduler.git"
   },
   "engines": {
-    "node": "10.15.3"
+    "node": "12.2.0"
   },
   "author": {
     "name": "Oleg Alexandrov",
