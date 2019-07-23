@@ -281,7 +281,7 @@ exports.getAllJobs = async (req, res) => {
     })
 
     logger.info('getAllJobs result: %j', data)
-    res.send(data)
+    res.send(Object.assign({}, data))
   } catch (err) {
     logger.error('getAllJobs error:', err)
     res.status(500).send(retCode500(err.message))
