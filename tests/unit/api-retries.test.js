@@ -184,7 +184,7 @@ describe('API retries', function () {
   })
 
   it('getAll success', async () => {
-    await doTest({ get: apiStub(1, jobsResponse, cannotGetJobs) }, 'getAllJobs', reqBodyUrl, { 0: jobResponse })
+    await doTest({ get: apiStub(1, jobsResponse, cannotGetJobs) }, 'getAllJobs', reqBodyUrl, [jobResponse])
   })
 
   it('getAll fail', async () => {
