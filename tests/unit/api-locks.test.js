@@ -17,7 +17,7 @@ const job = {
     jobTemplate: {
       spec: {
         template: {
-          spec: { containers: [{ env: [{ name: 'JOB', value: '{}' }] }] }
+          spec: { enableServiceLinks: false, containers: [{ env: [{ name: 'JOB', value: '{}' }] }] }
         }
       }
     }

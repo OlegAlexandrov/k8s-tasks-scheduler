@@ -134,6 +134,7 @@ const cronJob = (name, reqBody) => {
         spec: {
           template: {
             spec: {
+              enableServiceLinks: false,
               containers: [{
 
                 name: 'executor',
