@@ -20,6 +20,7 @@ spec:
     hostPath:
       path: /usr/local/bin/kubectl
       type: File
+  enableServiceLinks: false
   containers:
   - image: olegalexandroff/k8s-tasks-scheduler:$TAG
     imagePullPolicy: IfNotPresent
