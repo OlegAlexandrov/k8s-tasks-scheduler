@@ -30,6 +30,9 @@ COPY --from=npms /root/package.json /scheduler
 COPY --from=npms /root/package-lock.json /scheduler
 COPY --from=npms /root/node_modules /scheduler/node_modules
 
+# Fix of vulnerability CVE-2019-20149
+RUN find /scheduler/node_modules -mindepth 3 -name kind-of -type d -exec rm -rf {} +
+
 COPY ./src /scheduler/src
 
 WORKDIR /scheduler/src
