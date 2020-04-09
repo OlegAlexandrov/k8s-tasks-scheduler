@@ -4,7 +4,7 @@
 # Initialize minikube
 #
 
-MINIKUBE_RELEASE="1.6.2"
+MINIKUBE_RELEASE="1.9.2"
 KUBECTL_RELEASE=$( curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt )
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -20,6 +20,8 @@ echo "Downloading \"minikube\" ..."
 curl -s -Lo minikube https://storage.googleapis.com/minikube/releases/v$MINIKUBE_RELEASE/minikube-linux-amd64
 chmod +x ./minikube
 sudo mv ./minikube /usr/local/bin/
+
+sudo apt-get install -y conntrack
 
 sudo minikube start --vm-driver=none --extra-config=apiserver.service-node-port-range=1000-10000
 
