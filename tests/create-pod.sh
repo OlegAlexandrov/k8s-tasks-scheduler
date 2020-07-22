@@ -26,6 +26,8 @@ POD_TEMPLATE_TMP="$POD_TEMPLATE".tmp
 
 envsubst < "$POD_TEMPLATE" > "$POD_TEMPLATE_TMP"
 
+kubectl delete pod -n tasks-scheduler k8s-tasks-scheduler> /dev/null
+
 kubectl create -f $POD_TEMPLATE_TMP
 
 rm "$POD_TEMPLATE_TMP"

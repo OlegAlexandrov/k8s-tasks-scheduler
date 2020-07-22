@@ -83,12 +83,17 @@ const jobName = (labels) => {
 
 const jobLabels = labels => _.omit(labels, (value, key) => isId(key))
 
+const cleanLabel = (label) =>  label.replace(/^Z|Z$/g, '')
+const sanitizeLabels = (labels) => _.object(_.map(_.keys(labels), (key) => [key, `Z${labels[key]}Z`]))
+const cleanLabels = (labels) => _.object(_.map(_.keys(labels), (key) => [key, cleanLabel(labels[key])]))
+
 const labelSelector = (labels) => {
   let selector = ''
 
   Object.entries(labels).forEach((label) => {
     if (!_.isEmpty(selector)) { selector += ',' }
-    selector += `${label[0]}=${label[1]}`
+    const labelValue = isId(label[0]) ? label[1] : `Z${label[1]}Z`
+    selector += `${label[0]}=${labelValue}`
   })
 
   return selector
@@ -120,7 +125,7 @@ const cronJob = (name, reqBody) => {
     metadata: {
 
       name: name || uuid(),
-      labels: _.extend({}, jobIds(reqBody.name), _.isObject(reqBody.labels) ? reqBody.labels : {}),
+      labels: _.extend({}, jobIds(reqBody.name), _.isObject(reqBody.labels) ? sanitizeLabels(reqBody.labels) : {}),
       finalizers: ['foregroundDeletion']
     },
 
@@ -231,7 +236,7 @@ const fillJob = (job) => {
 
     name: jobName(job.metadata.labels),
     type: jobData.type,
-    labels: jobLabels(job.metadata.labels),
+    labels: cleanLabels(jobLabels(job.metadata.labels)),
     request: jobData.request,
     recur: jobData.recur,
     executor: jobData.executor,

@@ -7,14 +7,11 @@ const bodyParser = require('body-parser')
 const winston = require('winston')
 const expressWinston = require('express-winston')
 const swaggerUI = require('swagger-ui-express')
-const path = require('path')
-const fs = require('fs')
 
 const models = require('./models.js')
 const api = require('./rest-api.js')
 const logger = require('./logger.js')
 
-const api_version = '1.0.0'
 const docs_path = '/docs'
 
 module.exports.run = function (host, port) {
