@@ -1,0 +1,20 @@
+'''Create Jobs'''
+-!|script|!-RestTools-!|
+|create job|${job_name_3}|uri|${request_uri_2}|recur|${cron_every_minute}|labels|${labels_spec}|
+
+
+'''Check Jobs'''
+|query:http result as table|${service_url}${api_jobs}                                                    |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|labels.taskid|
+|${job_name_3}             |${request_uri_2}|${cron_every_minute}|-Cron     |.Second       |_1234567ABC  |
+
+
+'''Query jobs by labels: ${labels_spec}'''
+|query:http result as table|${service_url}${api_jobs}?app=-Cron&product=.Second&taskid=_1234567ABC       |
+|name                      |request.uri     |recur.triggers.0    |labels.app|labels.product|labels.taskid|
+|${job_name_3}             |${request_uri_2}|${cron_every_minute}|-Cron     |.Second       |_1234567ABC  |
+
+'''Check response'''
+|query:last response as table|
+|status_code                 |
+|200                         |
