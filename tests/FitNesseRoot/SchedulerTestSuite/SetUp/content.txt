@@ -26,7 +26,8 @@
 !define labels_2 ({ "app": "Scheduler", "product": "Second" })
 !define labels_3 ({ "app": "Cron", "product": "Second" })
 !define labels_spec ({ "app": "-Cron", "product": ".Second", "taskid": "_1234567ABC" })
-!define labels_long ({ "item1id": "${long_job_name_1}", "item2id": "${long_job_name_2}" })
+!define labels_long ({ "app": "Scheduler", "product": "First", "item1id": "${long_job_name_1}${long_job_name_2}", "item2id": "${long_job_name_2}" })
+!define labels_concat ({ "item3": "has.", "item8":"labels","item6":"short_", "item0": "item-"})
 
 !define busybox (busybox)
 !define busybox_latest (busybox:latest)
