@@ -83,17 +83,53 @@ const jobName = (labels) => {
 
 const jobLabels = labels => _.omit(labels, (value, key) => isId(key))
 
+const splitLongLabel = (name, value) => {
+  if(value.length > 61) { // 63 (max length)  - 2 (for 'Z')
+    return _.map(
+      _.range(
+        Math.ceil(value.length / 61)
+      ), (idx) => [`${name}${idx}`, `Z${value.substring(61 * idx, 61 * idx + 61)}Z`]
+    )
+  } else
+  return [[name, `Z${value}Z`]]
+}
 const cleanLabel = (label) =>  label.replace(/^Z|Z$/g, '')
-const sanitizeLabels = (labels) => _.object(_.map(_.keys(labels), (key) => [key, `Z${labels[key]}Z`]))
+const sanitizeLabels = (labels) => _.object(_.flatten(_.map(_.keys(labels), (key) => splitLongLabel(key, labels[key])), true))
 const cleanLabels = (labels) => _.object(_.map(_.keys(labels), (key) => [key, cleanLabel(labels[key])]))
+
+const combineLongLabels = (labels) => {
+	let processedKeys = []
+	return _.object(_.map(_.keys(labels), (key) => {
+
+		if(processedKeys.includes(key)){
+			return []
+		} else {
+			if(key.match(/\d+$/)){
+				const realLabelName = /(.*)\d+$/g.exec(key)[1];
+				const re = `^${realLabelName}\\d+$`
+				const curLabelsGroup = _.pick(labels, (value, key) => (new RegExp(re, 'g')).test(key))
+				processedKeys = _.union(processedKeys, _.keys(curLabelsGroup))
+				return [realLabelName, _.values(curLabelsGroup).join('')]
+			} else {
+				return [key, labels[key]]
+			}
+		}
+	}))
+}
 
 const labelSelector = (labels) => {
   let selector = ''
 
   Object.entries(labels).forEach((label) => {
     if (!_.isEmpty(selector)) { selector += ',' }
-    const labelValue = isId(label[0]) ? label[1] : `Z${label[1]}Z`
-    selector += `${label[0]}=${labelValue}`
+    if(isId(label[0])){
+      selector += `${label[0]}=${label[1]}`
+    } else {
+      _.each(splitLongLabel(label[0], label[1]), (item) => {
+        selector += `${item[0]}=${item[1]},`
+      })
+      selector = selector.slice(0, -1)
+    }
   })
 
   return selector
@@ -236,7 +272,7 @@ const fillJob = (job) => {
 
     name: jobName(job.metadata.labels),
     type: jobData.type,
-    labels: cleanLabels(jobLabels(job.metadata.labels)),
+    labels: combineLongLabels(cleanLabels(jobLabels(job.metadata.labels))),
     request: jobData.request,
     recur: jobData.recur,
     executor: jobData.executor,
