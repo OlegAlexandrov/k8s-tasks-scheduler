@@ -117,14 +117,19 @@ const combineLongLabels = (labels) => {
 	}))
 }
 
-
 const labelSelector = (labels) => {
   let selector = ''
 
   Object.entries(labels).forEach((label) => {
     if (!_.isEmpty(selector)) { selector += ',' }
-    const labelValue = isId(label[0]) ? label[1] : `Z${label[1]}Z`
-    selector += `${label[0]}=${labelValue}`
+    if(isId(label[0])){
+      selector += `${label[0]}=${label[1]}`
+    } else {
+      _.each(splitLongLabel(label[0], label[1]), (item) => {
+        selector += `${item[0]}=${item[1]},`
+      })
+      selector = selector.slice(0, -1)
+    }
   })
 
   return selector
