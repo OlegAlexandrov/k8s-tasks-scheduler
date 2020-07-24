@@ -1,0 +1,22 @@
+'''Create Jobs'''
+-!|script|!-RestTools-!|
+|create job|${job_name_2}|uri|${request_uri_1}|recur|${cron_every_minute}|labels|${labels_concat}|
+
+'''Check Jobs'''
+|query:http result as table|${service_url}${api_jobs}                                  |
+|name                      |request.uri     |recur.triggers.0    |labels.item          |
+|${job_name_2}             |${request_uri_1}|${cron_every_minute}|item-has.short_labels|
+
+'''Query jobs by labels: ${labels_concat}'''
+|query:http result as table|${service_url}${api_jobs}?item0=item-&item3=has.&item6=short_&item8=labels|
+|name                      |request.uri          |recur.triggers.0         |labels.item               |
+|${job_name_2}             |${request_uri_1}     |${cron_every_minute}     |item-has.short_labels     |
+
+'''Query jobs by labels: { "item": "item-has.short_labels" }'''
+|query:http result as table|${service_url}${api_jobs}?item=item-has.short_labels|
+|name                      |request.uri    |recur.triggers.0    |labels.item    |
+
+'''Check response'''
+|query:last response as table|
+|status_code                 |
+|200                         |
